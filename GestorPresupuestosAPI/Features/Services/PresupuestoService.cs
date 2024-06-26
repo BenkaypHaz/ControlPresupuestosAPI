@@ -1,0 +1,170 @@
+﻿using GestorPresupuestosAPI.Features.Utility;
+using GestorPresupuestosAPI.Infraestructure.DataBases;
+using GestorPresupuestosAPI.Infraestructure.Modelos;
+using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
+
+public class PresupuestoService
+{
+    private readonly PresupuestoRepository _presupuestoRepository;
+    private readonly GestorPresupuestosAHM _context;
+    private readonly PresupuestoCuentaRepository _presupuestoCuentaRepository;
+
+    public PresupuestoService(GestorPresupuestosAHM context,PresupuestoRepository presupuestoRepository, PresupuestoCuentaRepository presupuestoCuentaRepository)
+    {
+        _presupuestoRepository = presupuestoRepository;
+        _context = context;
+        _presupuestoCuentaRepository = presupuestoCuentaRepository;
+
+    }
+
+    public async Task<ApiResponse> GetAllPresupuestosAsync()
+    {
+        try
+        {
+            var presupuestos = await _presupuestoRepository.GetAllPresupuestosAsync();
+            return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse> GetTipoPresupuesto()
+    {
+        try
+        {
+            var presupuestos = await _presupuestoRepository.GetTipoPresupuesto();
+            return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+
+    
+    public async Task<ApiResponse> CrearPresupuestoAsync(string nombre, int tipo, int usuid)
+    {
+        try
+        {
+            var createdPresupuesto = await _presupuestoRepository.CrearPresupuesto(nombre,tipo,usuid);
+            return ApiResponse.Ok("Presupuesto added successfully", createdPresupuesto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while adding the presupuesto: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse> GetPresupuestoByIdAsync(int id)
+    {
+        try
+        {
+            var presupuesto = await _presupuestoRepository.GetPresupuestoByIdAsync(id);
+            if (presupuesto == null || !presupuesto.Activo)
+            {
+                return ApiResponse.NotFound($"Presupuesto with ID {id} not found.");
+            }
+            return ApiResponse.Ok("Presupuesto found", presupuesto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse> UpdatePresupuestoAsync(Presupuesto presupuesto)
+    {
+        try
+        {
+            var existingPresupuesto = await _presupuestoRepository.GetPresupuestoByIdAsync(presupuesto.IdPresu);
+            if (existingPresupuesto == null)
+            {
+                return ApiResponse.NotFound($"Presupuesto with ID {presupuesto.IdPresu} not found.");
+            }
+
+            await _presupuestoRepository.UpdatePresupuestoAsync(presupuesto);
+            return ApiResponse.Ok($"Presupuesto with ID {presupuesto.IdPresu} updated successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while updating the presupuesto: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse> DeletePresupuestoAsync(int id)
+    {
+        try
+        {
+             await _presupuestoRepository.DeactivatePresupuestoAsync(id);
+            return ApiResponse.Ok($"Presupuesto with ID {id} deactivated successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while deactivating the presupuesto: {ex.Message}");
+        }
+    }
+
+
+    public async Task<ApiResponse> GetPresupuestoInfo(int id)
+    {
+        try
+        {
+            PresupuestoWithCuentasDTO presu = await _presupuestoRepository.GetPresupuestoInfo(id);
+            return ApiResponse.Ok("Information Found",presu);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while searching the presupuesto: {ex.Message}");
+        }
+    }
+
+
+    public async Task<ApiResponse> AddPresupuestoWithCuentasAsync(decimal total, List<PresupuestoCuenta> newCuentas)
+    {
+        using (var transaction = _context.Database.BeginTransaction())
+        {
+            try
+            {
+                Presupuesto presupuesto = await _presupuestoRepository.AddPresupuestoAsync(total, newCuentas.FirstOrDefault().IdPresu);
+
+                if (newCuentas.Any())
+                {
+                    var existingCuentas = await _presupuestoCuentaRepository.FindByPresupuestoIdAsync(presupuesto.IdPresu);
+
+                    var ejecutadaStatusMap = existingCuentas.ToDictionary(c => c.Descripcion, c => c.Ejecutada);
+
+                    if (existingCuentas.Any())
+                    {
+                        await _presupuestoCuentaRepository.DeletePresupuestoCuentasAsync(existingCuentas);
+                    }
+
+                    foreach (var cuenta in newCuentas)
+                    {
+                        cuenta.IdPresu = presupuesto.IdPresu; 
+                        if (ejecutadaStatusMap.ContainsKey(cuenta.Descripcion))
+                        {
+                            cuenta.Ejecutada = ejecutadaStatusMap[cuenta.Descripcion]; 
+                        }
+                    }
+
+                    await _presupuestoCuentaRepository.AddPresupuestoCuentasAsync(newCuentas);
+                }
+
+                transaction.Commit();
+                return ApiResponse.Ok("Presupuesto and related cuentas added successfully", null);
+            }
+            catch (Exception ex)
+            {
+                transaction.Rollback();
+                return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+            }
+        }
+    }
+
+
+
+}

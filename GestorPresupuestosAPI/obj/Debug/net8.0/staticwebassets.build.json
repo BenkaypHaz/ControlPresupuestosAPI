@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "vyPEJZKNmapQOJH2ewhIb/rC6ACtLAqPlMcvPLYdHyM=",
+  "Source": "GestorPresupuestosAPI",
+  "BasePath": "_content/GestorPresupuestosAPI",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
