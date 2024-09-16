@@ -21,6 +21,25 @@ public class PresupuestosController : ControllerBase
         return Ok(response);
     }
 
+    [HttpGet("GetPresuById", Name = "GetPresuById")]
+    public async Task<ActionResult<ApiResponse>> GetPresupuestoId([FromQuery] int idPresu)
+    {
+        var response = await _presupuestoService.GetPresupuestoBydId(idPresu);
+        return Ok(response);
+    }
+
+    [HttpGet("GetPresupuestosAdmin", Name = "GetPresupuestosAdmin")]
+    public async Task<ActionResult<ApiResponse>> GetPresupuestosAdmin()
+    {
+        var response = await _presupuestoService.GetAllPresupuestosAdminAsync();
+        return Ok(response);
+    }
+    [HttpGet("GetAllPresupuestosAprobadosAdminAsync", Name = "GetAllPresupuestosAprobadosAdminAsync")]
+    public async Task<ActionResult<ApiResponse>> GetAllPresupuestosAprobadosAdminAsync()
+    {
+        var response = await _presupuestoService.GetAllPresupuestosAprobadosAdminAsync();
+        return Ok(response);
+    }
     [HttpGet("GetTipoPresupuesto")]
     public async Task<ActionResult<ApiResponse>> GetTipoPresupuestos()
     {
@@ -34,11 +53,37 @@ public class PresupuestosController : ControllerBase
         return Ok(response);
     }
 
+    [HttpGet("GetPresupuestoCreadoById")]
+    public async Task<IActionResult> GetPresupuestoCreadoById([FromQuery] int idUsu)
+    {
+        try
+        {
+            var result = await _presupuestoService.GetPresupuestoCreadoById(idUsu);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
+    }
+    [HttpGet("GetPresupuestoByUsuId")]
+    public async Task<IActionResult> GetPresupuestoByUsuId([FromQuery] int idUsu)
+    {
+        try
+        {
+            var result = await _presupuestoService.GetPresupuestoByUsuId(idUsu);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
+    }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ApiResponse>> GetPresupuestoById(int id)
+    public async Task<ActionResult<ApiResponse>> GetPresupuestoByUsu(int id)
     {
-        var response = await _presupuestoService.GetPresupuestoByIdAsync(id);
+        var response = await _presupuestoService.GetPresupuestoByUsuIdAsync(id);
         if (!response.Success)
         {
             return NotFound(response);
@@ -60,6 +105,33 @@ public class PresupuestosController : ControllerBase
             return BadRequest(response);
         }
         return Ok(response);
+    }
+    [HttpGet("UpdatePresupuestoEstadoRevisar")]
+    public async Task<IActionResult> UpdatePresupuestoEstado([FromQuery] int idPresu, [FromQuery] int estado)
+    {
+        try
+        {
+            var result = await _presupuestoService.UpdatePresupuestoEstado(idPresu, estado);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
+    }
+
+    [HttpGet("UpdatePresupuestoEstado")]
+    public async Task<IActionResult> UpdatePresupuestoEstado([FromQuery] int idPresu, [FromQuery] int estado, int usuModifica)
+    {
+        try
+        {
+            var result = await _presupuestoService.UpdatePresupuestoEstadoAsync(idPresu, estado, usuModifica);
+            return Ok(result); 
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
     }
 
     [HttpDelete("{id}")]

@@ -32,7 +32,7 @@ public class Usuarios
     public string? Correo { get; set; }
 
     [Column("id_departamento")]
-    public int? IdDepartamento { get; set; }
+    public int IdDepartamento { get; set; }
 
     [Column("id_rol")]
     public int? IdRol { get; set; }

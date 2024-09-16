@@ -13,4 +13,5 @@ public class Departamentos
     [Column("nombre")]
     [StringLength(200)]
     public string Nombre { get; set; }
+
 }

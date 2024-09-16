@@ -22,5 +22,8 @@ public class ItemsEjecucionParcial
     [DataType(DataType.Date)]
     public DateTime fecha_compra { get; set; }
     [Column("Activo")]
-    public bool Activo {  get; set; }   
+    public bool Activo {  get; set; }
+
+    [Column("EsIngreso")]
+    public bool EsIngreso { get; set; }
 }

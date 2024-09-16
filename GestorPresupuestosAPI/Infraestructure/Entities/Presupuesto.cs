@@ -27,5 +27,6 @@ public class Presupuesto
     public bool Activo { get; set; } = true;
     [Column("usu_crea")]
     public int usu_crea { get; set; }
-
+    [Column("id_departamento")]
+    public int id_departamento { get; set; }
 }

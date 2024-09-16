@@ -35,7 +35,6 @@ public class CuentaRepository
         if (existingCuenta != null)
         {
             existingCuenta.Descripcions = cuentaToUpdate.Descripcions;
-            existingCuenta.IdDepartamento = cuentaToUpdate.IdDepartamento;
             await _context.SaveChangesAsync();
         }
     }

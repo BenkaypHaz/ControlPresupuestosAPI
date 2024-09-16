@@ -31,7 +31,54 @@ public class PresupuestoService
             return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
         }
     }
-
+    public async Task<ApiResponse> GetPresupuestoBydId(int idPresu)
+    {
+        try
+        {
+            var presupuestos = await _presupuestoRepository.GetPresupuestoById(idPresu);
+            return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> GetAllPresupuestosAdminAsync()
+    {
+        try
+        {
+            var presupuestos = await _presupuestoRepository.GetAllPresupuestosAdminAsync();
+            return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> GetPresupuestoByUsuId(int id)
+    {
+        try
+        {
+            var presupuestos = await _presupuestoRepository.GetPresupuestoByUsuId(id);
+            return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> GetAllPresupuestosAprobadosAdminAsync()
+    {
+        try
+        {
+            var presupuestos = await _presupuestoRepository.GetAllPresupuestosAprobadosAdminAsync();
+            return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
     public async Task<ApiResponse> GetTipoPresupuesto()
     {
         try
@@ -58,7 +105,38 @@ public class PresupuestoService
             return ApiResponse.BadRequest($"An error occurred while adding the presupuesto: {ex.Message}");
         }
     }
-
+    public async Task<ApiResponse> GetPresupuestoCreadoById(int id)
+    {
+        try
+        {
+            var presupuesto = await _presupuestoRepository.GetPresupuestoCreadoById(id);
+            if (presupuesto == null)
+            {
+                return ApiResponse.NotFound($"Presupuesto with ID {id} not found.");
+            }
+            return ApiResponse.Ok("Presupuesto found", presupuesto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> GetPresupuestoByUsuIdAsync(int id)
+    {
+        try
+        {
+            var presupuesto = await _presupuestoRepository.GetPresupuestoByUsuAsync(id);
+            if (presupuesto == null)
+            {
+                return ApiResponse.NotFound($"Presupuesto with ID {id} not found.");
+            }
+            return ApiResponse.Ok("Presupuesto found", presupuesto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
     public async Task<ApiResponse> GetPresupuestoByIdAsync(int id)
     {
         try
@@ -95,6 +173,31 @@ public class PresupuestoService
         }
     }
 
+    public async Task<ApiResponse> UpdatePresupuestoEstado(int idPresu, int estado)
+    {
+        try
+        {
+            await _presupuestoRepository.UpdatePresupuestoEstado(idPresu, estado);
+            return ApiResponse.Ok($"Presupuesto with ID {idPresu} updated successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> UpdatePresupuestoEstadoAsync(int idPresu, int estado, int usuModifica)
+    {
+        try
+        {
+             await _presupuestoRepository.UpdatePresupuestoEstadoAsync(idPresu, estado, usuModifica);
+             return ApiResponse.Ok($"Presupuesto with ID {idPresu} updated successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
+    }
+
     public async Task<ApiResponse> DeletePresupuestoAsync(int id)
     {
         try
@@ -107,8 +210,6 @@ public class PresupuestoService
             return ApiResponse.BadRequest($"An error occurred while deactivating the presupuesto: {ex.Message}");
         }
     }
-
-
     public async Task<ApiResponse> GetPresupuestoInfo(int id)
     {
         try

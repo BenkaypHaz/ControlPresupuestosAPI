@@ -10,12 +10,13 @@ CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
          builder =>
          {
-             builder.WithOrigins("http://localhost:5173") 
+             builder.WithOrigins("http://localhost:5173", "https://www.ahm-honduras.com")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();
@@ -34,6 +35,10 @@ builder.Services.AddScoped<PresupuestoRepository>();
 builder.Services.AddScoped<CuentaRepository>();
 builder.Services.AddScoped<PresupuestoCuentaRepository>();
 builder.Services.AddScoped<ProveedoresRepository>();
+builder.Services.AddScoped<NotificacionesRepository>();
+builder.Services.AddScoped<DashboardRepository>();
+builder.Services.AddScoped<ServicioRepository>();
+
 
 builder.Services.AddScoped<UsuarioService>();
 builder.Services.AddScoped<DepartamentoService>();
@@ -43,6 +48,10 @@ builder.Services.AddScoped<PresupuestoService>();
 builder.Services.AddScoped<CuentaService>();
 builder.Services.AddScoped<PresupuestoCuentaService>();
 builder.Services.AddScoped<ProveedoresService>();
+builder.Services.AddScoped<NotificacionesService>();
+builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<ServicioService>();
 
 var app = builder.Build();
 

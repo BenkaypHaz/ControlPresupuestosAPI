@@ -14,8 +14,4 @@ public class Cuenta
     [StringLength(150)]
     public string Descripcions { get; set; }
 
-    [ForeignKey("Departamento")]
-    [Column("id_departamento")]
-    public int IdDepartamento { get; set; }
-
 }

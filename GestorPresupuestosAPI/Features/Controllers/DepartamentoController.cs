@@ -52,12 +52,9 @@ public class DepartamentosController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse>> UpdateDepartamento(int id, [FromBody] Departamentos departamento)
     {
-        if (departamento == null || id != departamento.IdDepartamento)
-        {
-            return BadRequest(ApiResponse.BadRequest("Invalid request"));
-        }
 
-        var response = await _departamentoService.UpdateDepartamentoAsync(departamento);
+
+        var response = await _departamentoService.UpdateDepartamentoAsync(id,departamento);
         if (!response.Success)
         {
             return BadRequest(response);

@@ -51,6 +51,37 @@ public class PresupuestoCuentasController : ControllerBase
             return StatusCode(500, "Internal server error: " + ex.Message);
         }
     }
+    [HttpGet("GetSummaryTipoPresu/{tipopresu}", Name = "GetSummaryTipoPresu")]
+    public async Task<ActionResult<ApiResponse>> GetSummaryTipoPresu(int tipopresu)
+    {
+        var response = await _presupuestoCuentaService.GetSummaryTipoPresu(tipopresu);
+        if (!response.Success)
+        {
+            return NotFound(response);
+        }
+        return Ok(response);
+    }
+    [HttpGet("GetSummaryAllPresu", Name = "GetSummaryAllPresu")]
+    public async Task<ActionResult<ApiResponse>> GetSummaryAllPresu()
+    {
+        var response = await _presupuestoCuentaService.GetSummaryAllPresu();
+        if (!response.Success)
+        {
+            return NotFound(response);
+        }
+        return Ok(response);
+    }
+
+    [HttpGet("GetSummaryByIdDepto", Name = "GetSummaryByIdDepto")]
+    public async Task<ActionResult<ApiResponse>> GetSummaryByIdDepto(int idDepto)
+    {
+        var response = await _presupuestoCuentaService.GetSummaryByIdDepto(idDepto);
+        if (!response.Success)
+        {
+            return NotFound(response);
+        }
+        return Ok(response);
+    }
 
     [HttpGet("GetSummaryById/{idpresu}", Name = "GetSummaryById")]
     public async Task<ActionResult<ApiResponse>> GetSummaryById(int idpresu)
@@ -162,6 +193,26 @@ public class PresupuestoCuentasController : ControllerBase
         }
         return Ok(response);
     }
+    [HttpPost("AddItemEjecutadosAdmin", Name = "AddItemEjecutadosAdmin")]
+    public async Task<ActionResult<ApiResponse>> AddItemsEjecutadosAdmin([FromBody] ItemsConNoti elementos)
+    {
+        var response = await _presupuestoCuentaService.AddItemsEjecutadosAdminAsync(elementos);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return Ok(response);
+    }
+    [HttpPost("AddItemEjecucionParcialAdmin", Name = "AddItemEjecucionParcialAdmin")]
+    public async Task<ActionResult<ApiResponse>> AddItemEjecucionParcialAdmin([FromBody] ItemsParcialesConNoti elementos)
+    {
+        var response = await _presupuestoCuentaService.AddItemsEjecucionParcialAdminAsync(elementos);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return Ok(response);
+    }
 
     [HttpPost("AddItemEjecutadosParcial", Name = "AddItemEjecutadosParcial")]
     public async Task<ActionResult<ApiResponse>> AddItemEjecutadosParcial([FromBody] ItemsEjecucionParcial item)
@@ -173,7 +224,18 @@ public class PresupuestoCuentasController : ControllerBase
         }
         return Ok(response);
     }
+    [HttpPut("UpdatePresupuestoCuentaAdmin", Name = "UpdatePresupuestoCuentaAdmin")]
+    public async Task<IActionResult> UpdatePresupuestoCuenta([FromBody] PresupuestoCuentaUpdateDTO dto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest("Invalid data.");
 
+        var response = await _presupuestoCuentaService.UpdatePresupuestoCuentaAsync(dto);
+        if (!response.Success)
+            return BadRequest(response);
+
+        return Ok(response);
+    }
     [HttpGet("GetCuentaResumen/{idcuenta}", Name = "GetCuentaResumen")]
     public async Task<ActionResult<ApiResponse>> GetCuentaResumen(int idcuenta)
     {

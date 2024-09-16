@@ -14,5 +14,6 @@
         public int IdCuenta { get; set; }   
         public bool Ejecutada { get; set; } 
         public bool EjecutadaParcial { get; set; }
+        public bool Modificada { get; set; }
     }
 }

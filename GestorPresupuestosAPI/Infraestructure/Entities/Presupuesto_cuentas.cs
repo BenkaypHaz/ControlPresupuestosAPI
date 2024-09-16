@@ -33,5 +33,9 @@ public class PresupuestoCuenta
     public bool Ejecutada { get; set; }
     [Column("EjecucionParcial")]
     public bool EjecucionParcial { get; set; }
+    [Column("Modificada")]
+    public bool Modificada { get; set; }
+    [Column("EsIngreso")]
+    public bool EsIngreso { get; set; }
 
 }

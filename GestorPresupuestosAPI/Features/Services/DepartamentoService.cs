@@ -55,18 +55,18 @@ public class DepartamentoService
         }
     }
 
-    public async Task<ApiResponse> UpdateDepartamentoAsync(Departamentos departamento)
+    public async Task<ApiResponse> UpdateDepartamentoAsync(int id,Departamentos departamento)
     {
         try
         {
-            var existingDepartamento = await _departamentoRepository.GetDepartamentoByIdAsync(departamento.IdDepartamento);
+            var existingDepartamento = await _departamentoRepository.GetDepartamentoByIdAsync(id);
             if (existingDepartamento == null)
             {
                 return ApiResponse.NotFound($"Departamento with ID {departamento.IdDepartamento} not found.");
             }
 
-            await _departamentoRepository.UpdateDepartamentoAsync(departamento);
-            return ApiResponse.Ok($"Departamento with ID {departamento.IdDepartamento} updated successfully.");
+            await _departamentoRepository.UpdateDepartamentoAsync(id,departamento);
+            return ApiResponse.Ok($"Departamento with ID {id} updated successfully.");
         }
         catch (Exception ex)
         {

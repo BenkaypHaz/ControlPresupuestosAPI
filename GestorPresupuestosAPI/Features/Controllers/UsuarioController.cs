@@ -53,12 +53,7 @@ public class UsuarioController : ControllerBase
     [HttpPut("{id}")]
     public async Task<ActionResult<ApiResponse>> UpdateUser(int id, [FromBody] Usuarios user)
     {
-        if (user == null || id != user.IdUsuario)
-        {
-            return BadRequest(ApiResponse.BadRequest("Invalid request"));
-        }
-
-        var response = await _usuarioService.UpdateUserAsync(user);
+        var response = await _usuarioService.UpdateUserAsync(id,user);
         if (!response.Success)
         {
             return BadRequest(response);
@@ -66,29 +61,51 @@ public class UsuarioController : ControllerBase
         return Ok(response); 
     }
 
-    [HttpDelete("{id}")]
-    public async Task<ActionResult<ApiResponse>> DeleteUser(int id)
-    {
-        var response = await _usuarioService.DeleteUserAsync(id);
-        if (!response.Success)
-        {
-            return NotFound(response);
-        }
-        return Ok(response); 
-    }
 
     [HttpPost("authenticate")]
     public async Task<ActionResult<ApiResponse>> Authenticate([FromBody] Credentials credentials)
     {
         if (!ModelState.IsValid)
-            return BadRequest(ApiResponse.BadRequest("request Invalido"));
+            return BadRequest(ApiResponse.BadRequest("Invalid request"));
 
-        bool isAuthenticated = await _usuarioService.AuthenticateUserAsync(credentials);
+        var response = await _usuarioService.AuthenticateUserAsync(credentials);
+        if (!response.Success)
+            return BadRequest(response);
 
-        if (!isAuthenticated)
-            return Unauthorized(ApiResponse.BadRequest("Usuario o clave incorrectos"));
+        return Ok(response);
+    }
 
-        return Ok(ApiResponse.Ok("Ingreso correcto"));
+
+    [HttpGet("GetRoles")]
+    public async Task<ActionResult<ApiResponse>> GetAllCuentasDescriptions()
+    {
+        try
+        {
+            var roles = await _usuarioService.GetRoles();
+
+            return Ok(roles);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "Internal server error: " + ex.Message);
+        }
+    }
+
+    [HttpPut("{userId}/change-password")]
+    public async Task<ActionResult<ApiResponse>> ChangePassword(int userId, [FromBody] ChangePasswordRequest request)
+    {
+        if (request == null || string.IsNullOrEmpty(request.NewPassword))
+        {
+            return BadRequest(ApiResponse.BadRequest("Invalid request data."));
+        }
+
+        var response = await _usuarioService.ChangePasswordAsync(userId, request.NewPassword);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
     }
 
 }

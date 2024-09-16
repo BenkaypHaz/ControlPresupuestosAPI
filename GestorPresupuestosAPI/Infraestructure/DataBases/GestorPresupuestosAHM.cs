@@ -21,6 +21,11 @@ namespace GestorPresupuestosAPI.Infraestructure.DataBases
         public DbSet<ItemsEjecutados> ItemsEjecutados { get; set; }
         public DbSet<ItemsEjecucionParcial> ItemsEjecucionParcial { get; set; }
         public DbSet<Proveedores> proveedores { get; set; }
+        public DbSet<Roles> Roles { get; set; }
+        public DbSet<RolesUsuario> RolesUsuario { get; set; }
+        public DbSet<Permisos> Permisos { get; set; } 
+        public DbSet<Notificaciones> Notificaciones { get; set; }
+        public DbSet<Servicio> Servicios { get; set; }
 
     }
 }

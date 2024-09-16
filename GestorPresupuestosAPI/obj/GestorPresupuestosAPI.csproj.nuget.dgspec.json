@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\informatica3\\source\\repos\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj": {}
+    "C:\\Users\\informatica3\\Desktop\\Proyectos GITHUB\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj": {}
   },
   "projects": {
-    "C:\\Users\\informatica3\\source\\repos\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj": {
+    "C:\\Users\\informatica3\\Desktop\\Proyectos GITHUB\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\informatica3\\source\\repos\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj",
+        "projectUniqueName": "C:\\Users\\informatica3\\Desktop\\Proyectos GITHUB\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj",
         "projectName": "GestorPresupuestosAPI",
-        "projectPath": "C:\\Users\\informatica3\\source\\repos\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj",
+        "projectPath": "C:\\Users\\informatica3\\Desktop\\Proyectos GITHUB\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\GestorPresupuestosAPI.csproj",
         "packagesPath": "C:\\Users\\informatica3\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\informatica3\\source\\repos\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\obj\\",
+        "outputPath": "C:\\Users\\informatica3\\Desktop\\Proyectos GITHUB\\GestorPresupuestosAPI\\GestorPresupuestosAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\informatica3\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -46,6 +46,10 @@
             "Microsoft.EntityFrameworkCore.SqlServer": {
               "target": "Package",
               "version": "[8.0.3, )"
+            },
+            "Microsoft.ReportingServices.ReportViewerControl.WebForms": {
+              "target": "Package",
+              "version": "[150.1652.0, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

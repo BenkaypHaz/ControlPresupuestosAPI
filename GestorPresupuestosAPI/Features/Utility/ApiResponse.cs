@@ -29,5 +29,10 @@
         {
             return new ApiResponse(false, message);
         }
+
+        public static ApiResponse Unauthorized(string message)
+        {
+            return new ApiResponse(false, message);
+        }
     }
 }

@@ -53,9 +53,53 @@ public class PresupuestoCuentaService
             return ApiResponse.BadRequest($"An error occurred while searching cuentas: {ex.Message}");
         }
     }
+    public async Task<ApiResponse> UpdatePresupuestoCuentaAsync(PresupuestoCuentaUpdateDTO dto)
+    {
+        try
+        {
+            await _presupuestoCuentaRepository.UpdatePresupuestoCuentaAsync(dto);
+            return ApiResponse.Ok("Presupuesto cuenta updated successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest("Failed to update presupuesto cuenta.", new List<string> { ex.Message });
+        }
+    }
     public async Task<PresupuestoSummaryDTO> GetPresupuestoSummaryAsync()
     {
         return await _presupuestoCuentaRepository.GetPresupuestoSummaryAsync();
+    }
+    public async Task<ApiResponse> GetSummaryTipoPresu(int tipo)
+    {
+        try
+        {
+            var presupuestoCuenta = await _presupuestoCuentaRepository.GetSummaryPresupuestoByTipo(tipo);
+            if (presupuestoCuenta == null)
+            {
+                return ApiResponse.NotFound($"Summary not found.");
+            }
+            return ApiResponse.Ok("Summary found", presupuestoCuenta);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred searching Summary: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> GetSummaryAllPresu()
+    {
+        try
+        {
+            var presupuestoCuenta = await _presupuestoCuentaRepository.GetSummaryPresuEgreso();
+            if (presupuestoCuenta == null)
+            {
+                return ApiResponse.NotFound($"Summary not found.");
+            }
+            return ApiResponse.Ok("Summary found", presupuestoCuenta);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred searching Summary: {ex.Message}");
+        }
     }
     public async Task<ApiResponse> GetPresupuestoSummaryById(int idPresu)
     {
@@ -65,6 +109,22 @@ public class PresupuestoCuentaService
             if (presupuestoCuenta == null)
             {
                 return ApiResponse.NotFound($"Summary with ID {idPresu} not found.");
+            }
+            return ApiResponse.Ok("Summary found", presupuestoCuenta);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred searching Summary: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> GetSummaryByIdDepto(int idDepto)
+    {
+        try
+        {
+            var presupuestoCuenta = await _presupuestoCuentaRepository.GetPresupuestoSummaryByDepartment(idDepto);
+            if (presupuestoCuenta == null)
+            {
+                return ApiResponse.NotFound($"Summary with ID not found.");
             }
             return ApiResponse.Ok("Summary found", presupuestoCuenta);
         }
@@ -161,6 +221,31 @@ public class PresupuestoCuentaService
         }
     }
 
+    public async Task<ApiResponse> AddItemsEjecutadosAdminAsync(ItemsConNoti item)
+    {
+        try
+        {
+            await _presupuestoCuentaRepository.AddItemsEjecutadoAdminsAsync(item.Item, item.UsuModifica, item.Comentario);
+            return ApiResponse.Ok("Item added successfully", item);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+
+    public async Task<ApiResponse> AddItemsEjecucionParcialAdminAsync(ItemsParcialesConNoti item)
+    {
+        try
+        {
+            await _presupuestoCuentaRepository.AddItemsEjecucionParcialAdminAsync(item.Items, item.UsuModifica, item.Comentario);
+            return ApiResponse.Ok("Item added successfully", item);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
     public async Task<ApiResponse> AddItemsEjecucionParcialAsync(ItemsEjecucionParcial item)
     {
         try

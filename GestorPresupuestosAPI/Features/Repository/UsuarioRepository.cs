@@ -32,16 +32,14 @@ public class UsuarioRepository
         return user;
     }
 
-    public async Task UpdateUserAsync(Usuarios userToUpdate)
+    public async Task UpdateUserAsync(int id,Usuarios userToUpdate)
     {
-        var existingUser = await _context.usuarios.FirstOrDefaultAsync(u => u.IdUsuario == userToUpdate.IdUsuario);
+        var existingUser = await _context.usuarios.FirstOrDefaultAsync(u => u.IdUsuario == id);
         if (existingUser != null)
         {
             existingUser.Usuario = userToUpdate.Usuario;
             existingUser.Nombre = userToUpdate.Nombre;
-            existingUser.ClaveEncriptada = userToUpdate.ClaveEncriptada; 
             existingUser.Correo = userToUpdate.Correo;
-            existingUser.activo = userToUpdate.activo;
             existingUser.IdDepartamento = userToUpdate.IdDepartamento;
             existingUser.IdRol = userToUpdate.IdRol;
 
@@ -64,5 +62,35 @@ public class UsuarioRepository
     {
         return await _context.usuarios.FirstOrDefaultAsync(u => u.Usuario == username);
     }
+
+
+    public async Task<RolesUsuario> GetUserRoleAsync(int userId)
+    {
+        return await _context.RolesUsuario.FirstOrDefaultAsync(ru => ru.UsuId == userId);
+    }
+
+    public async Task<List<Roles> >GetRoles()
+    {
+        return await _context.Roles.ToListAsync();
+    }
+    public async Task<List<string>> GetPermissionsByRoleAsync(int roleId)
+    {
+        return await _context.Permisos
+                             .Where(p => p.RoleId == roleId)
+                             .Select(p => p.Permiso)
+                             .ToListAsync();
+    }
+
+
+    public async Task UpdatePasswordAsync(int userId, string newPasswordHash)
+    {
+        var user = await _context.usuarios.FindAsync(userId);
+        if (user != null)
+        {
+            user.ClaveEncriptada = newPasswordHash;
+            await _context.SaveChangesAsync();
+        }
+    }
+
 
 }

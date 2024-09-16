@@ -29,9 +29,9 @@ public class DepartamentoRepository
         return departamento;
     }
 
-    public async Task UpdateDepartamentoAsync(Departamentos departamentoToUpdate)
+    public async Task UpdateDepartamentoAsync(int id,Departamentos departamentoToUpdate)
     {
-        var existingDepartamento = await _context.departamentos.FirstOrDefaultAsync(d => d.IdDepartamento == departamentoToUpdate.IdDepartamento);
+        var existingDepartamento = await _context.departamentos.FirstOrDefaultAsync(d => d.IdDepartamento == id);
         if (existingDepartamento != null)
         {
             existingDepartamento.Nombre = departamentoToUpdate.Nombre;
