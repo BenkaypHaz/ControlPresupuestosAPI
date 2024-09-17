@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GestorPresupuestosAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5683912ed54a6ba247ccfc8db13c696fcdb2a392")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+89a3ccab87fcdfd6060d6827e1c7527b86b0f110")]
 [assembly: System.Reflection.AssemblyProductAttribute("GestorPresupuestosAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GestorPresupuestosAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

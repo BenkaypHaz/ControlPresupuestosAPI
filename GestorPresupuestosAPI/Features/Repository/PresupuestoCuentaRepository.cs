@@ -164,45 +164,69 @@ public class PresupuestoCuentaRepository
 
     public async Task<PresupuestoSummaryDTO> GetPresupuestoSummaryById(int idpresu)
     {
-        decimal lastPresupuestoCantidad = await _context.PresupuestoCuentas
-         .Where(x => x.IdPresu == idpresu)
-         .SumAsync(x => x.Cantidad);
 
-        var NoEjecutadas = await _context.PresupuestoCuentas.Where(x => x.IdPresu == idpresu).CountAsync(pc => !pc.Ejecutada);
-        var Ejecutadas = await _context.PresupuestoCuentas.Where(x => x.IdPresu == idpresu).CountAsync(pc => pc.Ejecutada);
+        bool extra = false;
+        var presupuesto = await _context.presupuesto
+            .Where(p => p.IdPresu == idpresu)
+            .FirstOrDefaultAsync();
+
+        if (presupuesto == null)
+        {
+            throw new Exception("Presupuesto not found.");
+        }
+
+        decimal lastPresupuestoCantidad = await _context.PresupuestoCuentas
+            .Where(x => x.IdPresu == idpresu)
+            .SumAsync(x => x.Cantidad);
+
+        var NoEjecutadas = await _context.PresupuestoCuentas
+            .Where(x => x.IdPresu == idpresu)
+            .CountAsync(pc => !pc.Ejecutada);
+
+        var Ejecutadas = await _context.PresupuestoCuentas
+            .Where(x => x.IdPresu == idpresu)
+            .CountAsync(pc => pc.Ejecutada);
 
         List<int> idCuentas = await _context.PresupuestoCuentas
-            .Where(x => x.IdPresu == idpresu) 
+            .Where(x => x.IdPresu == idpresu)
             .Select(x => x.IdCuenta)
             .ToListAsync();
 
         var sumsParciales = await _context.ItemsEjecucionParcial.Where(x => x.Activo)
-          .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu),
-           iep => iep.id_cuenta,
-           pc => pc.IdCuentas,
-           (iep, pc) => iep.cantidad)
-           .SumAsync(cantidad => cantidad);
+            .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu),
+                iep => iep.id_cuenta,
+                pc => pc.IdCuentas,
+                (iep, pc) => iep.cantidad)
+            .SumAsync(cantidad => cantidad);
 
         var sumsEjecuciones = await _context.ItemsEjecutados.Where(x => x.Activo)
-        .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu),
-        iep => iep.id_cuenta,
-        pc => pc.IdCuentas,
-        (iep, pc) => iep.cantidad_final)
-        .SumAsync(cantidad => cantidad);
+            .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu),
+                iep => iep.id_cuenta,
+                pc => pc.IdCuentas,
+                (iep, pc) => iep.cantidad_final)
+            .SumAsync(cantidad => cantidad);
 
         Decimal Total = sumsParciales + sumsEjecuciones;
 
         var disponible = lastPresupuestoCantidad - Total;
+
+        if (presupuesto.tipo_presupuesto == 2 && disponible < 0)
+        {
+            disponible = Math.Abs(disponible);
+            extra = true;
+        }
 
         return new PresupuestoSummaryDTO
         {
             Ejecutadas = Ejecutadas,
             NoEjecutadas = NoEjecutadas,
             Presupuesto = lastPresupuestoCantidad,
-            Disponible = disponible,
-            Gastado = Total
+            Disponible = disponible, 
+            Gastado = Total,
+            ingresoExtra = extra
         };
     }
+
 
     public async Task<PresupuestoSummaryDTO> GetSummaryPresuEgreso()
     {
@@ -400,25 +424,60 @@ public class PresupuestoCuentaRepository
         }
     }
 
-    public async Task DesactivarEjecucion(int id)
+    public async Task DesactivarEjecucion(int id, bool esParcial)
     {
-        var presupuestoCuenta = await _context.ItemsEjecutados
-            .Where(x => x.id_cuenta == id)
-            .OrderByDescending(x => x.id_ejecu)  
-            .FirstOrDefaultAsync();
+  
 
-        if (presupuestoCuenta != null)
+        if (!esParcial)
         {
-            var cuenta = await _context.PresupuestoCuentas.Where(x => x.IdCuentas == presupuestoCuenta.id_cuenta).FirstOrDefaultAsync();
-            if(cuenta != null)
+            var presupuestoCuenta = await _context.ItemsEjecutados
+              .Where(x => x.id_cuenta == id)
+              .OrderByDescending(x => x.id_ejecu)
+              .FirstOrDefaultAsync();
+
+            var cuenta = await _context.PresupuestoCuentas
+                .Where(x => x.IdCuentas == presupuestoCuenta.id_cuenta)
+                .FirstOrDefaultAsync();
+
+            if (cuenta != null)
             {
                 cuenta.Ejecutada = false;
                 cuenta.EjecucionParcial = false;
+                cuenta.Modificada = false;
             }
+
             presupuestoCuenta.Activo = false;
             await _context.SaveChangesAsync();
         }
+        else
+        {
+            var presupuestoCuentaFromPresuCuentas = await _context.PresupuestoCuentas
+                .Where(x => x.IdCuentas == id)
+                .FirstOrDefaultAsync();
+
+            if (presupuestoCuentaFromPresuCuentas != null)
+            {
+                var ejecucionesParciales = await _context.ItemsEjecucionParcial
+                    .Where(x => x.id_cuenta == presupuestoCuentaFromPresuCuentas.IdCuentas)
+                    .ToListAsync();
+
+                if (ejecucionesParciales.Any())
+                {
+                    foreach (var ejecParcial in ejecucionesParciales)
+                    {
+                        ejecParcial.Activo = false;
+                    }
+                }
+
+                presupuestoCuentaFromPresuCuentas.Ejecutada = false;
+                presupuestoCuentaFromPresuCuentas.EjecucionParcial = false;
+                presupuestoCuentaFromPresuCuentas.Modificada = false;
+
+                await _context.SaveChangesAsync();
+            }
+        }
     }
+
 
     public async Task<List<PresupuestoCuenta>> FindByPresupuestoIdAsync(int idPresu)
     {

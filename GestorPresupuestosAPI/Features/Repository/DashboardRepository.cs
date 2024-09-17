@@ -38,7 +38,7 @@ namespace GestorPresupuestosAPI.Features.Repository
                       p => p.IdPresu,
                       (pc, p) => new { pc, p })
                 .Where(joined => joined.p.tipo_presupuesto == tipoPresupuesto)
-                .Select(joined => joined.pc.IdCuenta)
+                .Select(joined => joined.pc.IdCuentas)
                 .ToListAsync();
 
             var sumsParciales = await _context.ItemsEjecucionParcial
@@ -95,6 +95,7 @@ namespace GestorPresupuestosAPI.Features.Repository
                 .CountAsync();
 
             var sumsParciales = await _context.ItemsEjecucionParcial
+                .Where(x => x.Activo)
                 .Join(_context.PresupuestoCuentas,
                       iep => iep.id_cuenta,
                       pc => pc.IdCuentas,
@@ -107,6 +108,7 @@ namespace GestorPresupuestosAPI.Features.Repository
                 .SumAsync(x => x.iep.cantidad);
 
             var sumsEjecuciones = await _context.ItemsEjecutados
+                .Where(x => x.Activo)
                 .Join(_context.PresupuestoCuentas,
                       ie => ie.id_cuenta,
                       pc => pc.IdCuentas,
