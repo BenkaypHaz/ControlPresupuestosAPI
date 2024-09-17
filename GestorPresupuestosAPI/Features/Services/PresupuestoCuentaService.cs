@@ -195,11 +195,11 @@ public class PresupuestoCuentaService
         }
     }
 
-    public async Task<ApiResponse> DesactivarEjecucion(int id)
+    public async Task<ApiResponse> DesactivarEjecucion(int id, bool esParcial)
     {
         try
         {
-            await _presupuestoCuentaRepository.DesactivarEjecucion(id);
+            await _presupuestoCuentaRepository.DesactivarEjecucion(id, esParcial);
             return ApiResponse.Ok($"Ejecucion with ID {id} desactivated successfully.");
         }
         catch (Exception ex)

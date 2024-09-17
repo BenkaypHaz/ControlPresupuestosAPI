@@ -11,7 +11,9 @@
 # User-specific folders
 .vs/
 .vscode/
-
+# Ignore Visual Studio build artifacts
+bin/
+obj/
 # Build results
 [Bb]in/
 [Oo]bj/

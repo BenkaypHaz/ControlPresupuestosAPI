@@ -161,10 +161,10 @@ public class PresupuestoCuentasController : ControllerBase
         return Ok(response);
     }
 
-    [HttpGet("DesactivarEjecucion/{id}", Name = "DesactivarEjecucion")]
-    public async Task<ActionResult<ApiResponse>> DesactivarEjecucion(int id)
+    [HttpGet("DesactivarEjecucion/{id}/{esParcial}", Name = "DesactivarEjecucion")]
+    public async Task<ActionResult<ApiResponse>> DesactivarEjecucion(int id,bool esParcial)
     {
-        var response = await _presupuestoCuentaService.DesactivarEjecucion(id);
+        var response = await _presupuestoCuentaService.DesactivarEjecucion(id,esParcial);
         if (!response.Success)
         {
             return NotFound(response);
