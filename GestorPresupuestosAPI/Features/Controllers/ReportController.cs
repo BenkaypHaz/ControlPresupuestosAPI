@@ -55,5 +55,24 @@ public class ReportController : ControllerBase
         }
     }
 
+    [HttpGet("PresupuestoCuentas")]
+    public async Task<IActionResult> PresupuestoCuentas([FromQuery] string nombre,int anio)
+    {
+        try
+        {
+            var parameters = new ReportParameter[]
+            {
+                new ReportParameter("anio", anio.ToString())
+            };
+
+            var reportBytes = await _reportService.GenerateReportAsync($"/Reports_GestorPresupuestos/{nombre}", parameters);
+
+            return File(reportBytes, "application/pdf", "PresupuestoGeneralReport.pdf");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
 
 }
