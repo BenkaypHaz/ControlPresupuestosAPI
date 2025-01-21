@@ -123,13 +123,10 @@ public class PresupuestoCuentasController : ControllerBase
         return Ok(response);
     }
 
-    [HttpPut("{id}")]
-    public async Task<ActionResult<ApiResponse>> UpdatePresupuestoCuenta(int id, [FromBody] PresupuestoCuenta presupuestoCuenta)
+    [HttpPut]
+    public async Task<ActionResult<ApiResponse>> UpdatePresupuestoCuenta( [FromBody] PresupuestoCuenta presupuestoCuenta)
     {
-        if (presupuestoCuenta == null || id != presupuestoCuenta.IdCuentas)
-        {
-            return BadRequest(ApiResponse.BadRequest("Invalid request"));
-        }
+
 
         var response = await _presupuestoCuentaService.UpdatePresupuestoCuentaAsync(presupuestoCuenta);
         if (!response.Success)
@@ -160,11 +157,21 @@ public class PresupuestoCuentasController : ControllerBase
         }
         return Ok(response);
     }
-
-    [HttpGet("DesactivarEjecucion/{id}/{esParcial}", Name = "DesactivarEjecucion")]
-    public async Task<ActionResult<ApiResponse>> DesactivarEjecucion(int id,bool esParcial)
+    [HttpGet("desactivarItemPresupuesto/{id}", Name = "desactivarItemPresupuesto")]
+    public async Task<ActionResult<ApiResponse>> desactivarItemPresupuesto(int id)
     {
-        var response = await _presupuestoCuentaService.DesactivarEjecucion(id,esParcial);
+        var response = await _presupuestoCuentaService.desactivarItemPresupuesto(id);
+        if (!response.Success)
+        {
+            return NotFound(response);
+        }
+        return Ok(response);
+    }
+
+    [HttpGet("DesactivarEjecucion/{id}", Name = "DesactivarEjecucion")]
+    public async Task<ActionResult<ApiResponse>> DesactivarEjecucion(int id)
+    {
+        var response = await _presupuestoCuentaService.DesactivarEjecucion(id);
         if (!response.Success)
         {
             return NotFound(response);

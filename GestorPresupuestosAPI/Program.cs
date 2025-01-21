@@ -38,6 +38,9 @@ builder.Services.AddScoped<ProveedoresRepository>();
 builder.Services.AddScoped<NotificacionesRepository>();
 builder.Services.AddScoped<DashboardRepository>();
 builder.Services.AddScoped<ServicioRepository>();
+builder.Services.AddScoped<CuentasxSubCuentasRepository>();
+builder.Services.AddScoped<VersionesRepository>();
+builder.Services.AddScoped<GeneralesxMadreRepository>();
 
 
 builder.Services.AddScoped<UsuarioService>();
@@ -52,6 +55,9 @@ builder.Services.AddScoped<NotificacionesService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<DashboardService>();
 builder.Services.AddScoped<ServicioService>();
+builder.Services.AddScoped<CuentasxSubCuentasService>();
+builder.Services.AddScoped<VersionesService>();
+builder.Services.AddScoped<GeneralesxMadreService>();
 
 var app = builder.Build();
 

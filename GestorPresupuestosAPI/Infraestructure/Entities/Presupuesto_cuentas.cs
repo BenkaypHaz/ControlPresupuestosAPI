@@ -18,7 +18,6 @@ public class PresupuestoCuenta
     public int IdCuenta { get; set; } 
 
     [Column("descripcion")]
-    [StringLength(100)]
     public string Descripcion { get; set; }
 
     [Column("cantidad")]
@@ -26,16 +25,19 @@ public class PresupuestoCuenta
     public decimal Cantidad { get; set; }
 
     [Column("Comentarios")]
-    [StringLength(150)]
     public string Comentarios { get; set; }
 
     [Column("Ejecutada")]
     public bool Ejecutada { get; set; }
     [Column("EjecucionParcial")]
     public bool EjecucionParcial { get; set; }
+    [Column("Activo")]
+    public bool Activo { get; set; }
     [Column("Modificada")]
     public bool Modificada { get; set; }
     [Column("EsIngreso")]
     public bool EsIngreso { get; set; }
+
+
 
 }

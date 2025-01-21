@@ -17,7 +17,10 @@ public class NotificacionesRepository
 
     public async Task<List<Notificaciones>> GetNotificacionByIdAsync(int id)
     {
-        return await _context.Notificaciones.Where(n => n.UsuPresupuesto == id).ToListAsync();
+        return await _context.Notificaciones
+            .Where(n => n.UsuPresupuesto == id)
+            .OrderBy(n => n.IdNoti)
+            .ToListAsync();
     }
 
     public async Task MarkNotificacionesAsLeidaAsync(List<int> ids)

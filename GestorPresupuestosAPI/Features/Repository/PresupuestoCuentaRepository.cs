@@ -15,7 +15,7 @@ public class PresupuestoCuentaRepository
 
     public async Task<List<PresupuestoCuenta>> GetAllPresupuestoCuentasAsync()
     {
-        return await _context.PresupuestoCuentas                           
+        return await _context.PresupuestoCuentas.Where(x=>x.Activo==true)                           
                              .ToListAsync();
     }
 
@@ -23,6 +23,7 @@ public class PresupuestoCuentaRepository
     public async Task<List<CuentaDetailDTO>> GetAllCuentas()
     {
         var results = await (from pc in _context.PresupuestoCuentas
+                             where pc.Activo==true
                              join cu in _context.cuenta on pc.IdCuenta equals cu.IdCuenta
                              select new
                              {
@@ -50,8 +51,13 @@ public class PresupuestoCuentaRepository
     public async Task<List<CuentaDetailDTO>> GetAllCuentasById(int idPresu)
     {
         var results = await (from pc in _context.PresupuestoCuentas
+                             where pc.Activo == true
+                             && pc.IdPresu == idPresu
+                             join ejecu in _context.ItemsEjecutados
+                                 .Where(e => e.Activo == true) // Filter for active ItemsEjecutados here
+                                 on pc.IdCuentas equals ejecu.id_cuenta into ejecuGroup
+                             from ejecu in ejecuGroup.DefaultIfEmpty() // Left outer join
                              join cu in _context.cuenta on pc.IdCuenta equals cu.IdCuenta
-                             where pc.IdPresu == idPresu 
                              select new
                              {
                                  cu.Descripcions,
@@ -61,9 +67,12 @@ public class PresupuestoCuentaRepository
                                  pc.IdCuentas,
                                  pc.Ejecutada,
                                  pc.EjecucionParcial,
-                                 pc.Modificada
+                                 pc.Modificada,
+                                 Bloqueado = ejecu != null ? ejecu.Bloqueado : false // Set Bloqueado to false if ejecu is null
                              })
-                            .ToListAsync();
+                      .ToListAsync();
+
+
 
         return results
             .GroupBy(r => r.Descripcions)
@@ -78,7 +87,8 @@ public class PresupuestoCuentaRepository
                     IdCuenta = item.IdCuentas,
                     Ejecutada = item.Ejecutada,
                     EjecutadaParcial = item.EjecucionParcial,
-                    Modificada = item.Modificada
+                    Modificada = item.Modificada,
+                    Bloqueada = item.Bloqueado
                 }).ToList()
             }).ToList();
     }
@@ -88,27 +98,12 @@ public class PresupuestoCuentaRepository
             .Where(p => p.id_departamento == idDepartamento)
             .SumAsync(x => x.Cantidad);
 
-        var NoEjecutadas = await _context.PresupuestoCuentas
-            .Join(_context.presupuesto,
-                  pc => pc.IdPresu,
-                  p => p.IdPresu,
-                  (pc, p) => new { pc, p })
-            .Where(joined => !joined.pc.Ejecutada && joined.p.id_departamento == idDepartamento)
-            .CountAsync();
-
-        var Ejecutadas = await _context.PresupuestoCuentas
-            .Join(_context.presupuesto,
-                  pc => pc.IdPresu,
-                  p => p.IdPresu,
-                  (pc, p) => new { pc, p })
-            .Where(joined => joined.pc.Ejecutada && joined.p.id_departamento == idDepartamento)
-            .CountAsync();
-
         var sumsParciales = await _context.ItemsEjecucionParcial
             .Join(_context.PresupuestoCuentas,
                   iep => iep.id_cuenta,
                   pc => pc.IdCuentas,
                   (iep, pc) => new { iep, pc })
+            .Where(joined => joined.pc.Activo==true)
             .Join(_context.presupuesto,
                   joined => joined.pc.IdPresu,
                   p => p.IdPresu,
@@ -121,6 +116,7 @@ public class PresupuestoCuentaRepository
                   ie => ie.id_cuenta,
                   pc => pc.IdCuentas,
                   (ie, pc) => new { ie, pc })
+            .Where(joined => joined.pc.Activo == true)
             .Join(_context.presupuesto,
                   joined => joined.pc.IdPresu,
                   p => p.IdPresu,
@@ -133,8 +129,6 @@ public class PresupuestoCuentaRepository
 
         return new PresupuestoSummaryDTO
         {
-            Ejecutadas = Ejecutadas,
-            NoEjecutadas = NoEjecutadas,
             Presupuesto = cantidadTotal,
             Disponible = disponible,
             Gastado = Total
@@ -146,16 +140,14 @@ public class PresupuestoCuentaRepository
     {
         var lastPresupuestoCantidad = await _context.presupuesto.OrderByDescending(p => p.IdPresu).FirstOrDefaultAsync();
 
-        var NoEjecutadas = await _context.PresupuestoCuentas.CountAsync(pc => !pc.Ejecutada);
-        var Ejecutadas = await _context.PresupuestoCuentas.CountAsync(pc => pc.Ejecutada);
+        var NoEjecutadas = await _context.PresupuestoCuentas.CountAsync(pc => !pc.Ejecutada && pc.Activo==true);
+        var Ejecutadas = await _context.PresupuestoCuentas.CountAsync(pc => pc.Ejecutada && pc.Activo == true);
 
-        var sumEjecutadas = await _context.PresupuestoCuentas.Where(pc => pc.Ejecutada).SumAsync(pc => pc.Cantidad);
+        var sumEjecutadas = await _context.PresupuestoCuentas.Where(pc => pc.Ejecutada && pc.Activo == true).SumAsync(pc => pc.Cantidad);
         var disponible = lastPresupuestoCantidad.Cantidad - sumEjecutadas;
 
         return new PresupuestoSummaryDTO
         {
-            Ejecutadas = Ejecutadas,
-            NoEjecutadas = NoEjecutadas,
             Presupuesto = lastPresupuestoCantidad.Cantidad,
             Disponible = disponible,
             Gastado = sumEjecutadas
@@ -176,31 +168,31 @@ public class PresupuestoCuentaRepository
         }
 
         decimal lastPresupuestoCantidad = await _context.PresupuestoCuentas
-            .Where(x => x.IdPresu == idpresu)
+            .Where(x => x.IdPresu == idpresu && x.Activo==true)
             .SumAsync(x => x.Cantidad);
 
         var NoEjecutadas = await _context.PresupuestoCuentas
             .Where(x => x.IdPresu == idpresu)
-            .CountAsync(pc => !pc.Ejecutada);
+            .CountAsync(pc => !pc.Ejecutada && pc.Activo==true);
 
         var Ejecutadas = await _context.PresupuestoCuentas
             .Where(x => x.IdPresu == idpresu)
             .CountAsync(pc => pc.Ejecutada);
 
         List<int> idCuentas = await _context.PresupuestoCuentas
-            .Where(x => x.IdPresu == idpresu)
+            .Where(x => x.IdPresu == idpresu && x.Activo==true)
             .Select(x => x.IdCuenta)
             .ToListAsync();
 
         var sumsParciales = await _context.ItemsEjecucionParcial.Where(x => x.Activo)
-            .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu),
+            .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu && pc.Activo==true),
                 iep => iep.id_cuenta,
                 pc => pc.IdCuentas,
                 (iep, pc) => iep.cantidad)
             .SumAsync(cantidad => cantidad);
 
         var sumsEjecuciones = await _context.ItemsEjecutados.Where(x => x.Activo)
-            .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu),
+            .Join(_context.PresupuestoCuentas.Where(pc => pc.IdPresu == idpresu && pc.Activo==true),
                 iep => iep.id_cuenta,
                 pc => pc.IdCuentas,
                 (iep, pc) => iep.cantidad_final)
@@ -218,8 +210,6 @@ public class PresupuestoCuentaRepository
 
         return new PresupuestoSummaryDTO
         {
-            Ejecutadas = Ejecutadas,
-            NoEjecutadas = NoEjecutadas,
             Presupuesto = lastPresupuestoCantidad,
             Disponible = disponible, 
             Gastado = Total,
@@ -234,10 +224,11 @@ public class PresupuestoCuentaRepository
          .SumAsync(x => x.Cantidad);
        
 
-        var NoEjecutadas = await _context.PresupuestoCuentas.CountAsync(pc => !pc.Ejecutada);
-        var Ejecutadas = await _context.PresupuestoCuentas.CountAsync(pc => pc.Ejecutada);
+        var NoEjecutadas = await _context.PresupuestoCuentas.CountAsync(pc => !pc.Ejecutada && pc.Activo==true);
+        var Ejecutadas = await _context.PresupuestoCuentas.CountAsync(pc => pc.Ejecutada && pc.Activo==true);
 
         List<int> idCuentas = await _context.PresupuestoCuentas
+            .Where( x=> x.Activo == true)
             .Select(x => x.IdCuenta)
             .ToListAsync();
 
@@ -261,8 +252,6 @@ public class PresupuestoCuentaRepository
 
         return new PresupuestoSummaryDTO
         {
-            Ejecutadas = Ejecutadas,
-            NoEjecutadas = NoEjecutadas,
             Presupuesto = cantidadTotal,
             Disponible = disponible,
             Gastado = Total
@@ -281,21 +270,21 @@ public class PresupuestoCuentaRepository
                   pc => pc.IdPresu,
                   p => p.IdPresu,
                   (pc, p) => new { pc, p })
-            .CountAsync(joined => !joined.pc.Ejecutada && joined.p.tipo_presupuesto == tipoPresupuesto);
+            .CountAsync(joined => !joined.pc.Ejecutada && joined.p.tipo_presupuesto == tipoPresupuesto && joined.pc.Activo==true);
 
         var Ejecutadas = await _context.PresupuestoCuentas
             .Join(_context.presupuesto,
                   pc => pc.IdPresu,
                   p => p.IdPresu,
                   (pc, p) => new { pc, p })
-            .CountAsync(joined => joined.pc.Ejecutada && joined.p.tipo_presupuesto == tipoPresupuesto);
+            .CountAsync(joined => joined.pc.Ejecutada && joined.p.tipo_presupuesto == tipoPresupuesto && joined.pc.Activo == true);
 
         List<int> idCuentas = await _context.PresupuestoCuentas
             .Join(_context.presupuesto,
                   pc => pc.IdPresu,
                   p => p.IdPresu,
                   (pc, p) => new { pc, p })
-            .Where(joined => joined.p.tipo_presupuesto == tipoPresupuesto)
+            .Where(joined => joined.p.tipo_presupuesto == tipoPresupuesto && joined.pc.Activo == true)
             .Select(joined => joined.pc.IdCuenta)
             .ToListAsync();
 
@@ -323,8 +312,6 @@ public class PresupuestoCuentaRepository
 
         return new PresupuestoSummaryDTO
         {
-            Ejecutadas = Ejecutadas,
-            NoEjecutadas = NoEjecutadas,
             Presupuesto = cantidadTotal,
             Disponible = disponible,
             Gastado = Total
@@ -339,10 +326,11 @@ public class PresupuestoCuentaRepository
          .SumAsync(x => x.Cantidad);
 
 
-        var NoEjecutadas = await _context.PresupuestoCuentas.CountAsync(pc => !pc.Ejecutada);
-        var Ejecutadas = await _context.PresupuestoCuentas.CountAsync(pc => pc.Ejecutada);
+        var NoEjecutadas = await _context.PresupuestoCuentas.CountAsync(pc => !pc.Ejecutada && pc.Activo == true);
+        var Ejecutadas = await _context.PresupuestoCuentas.CountAsync(pc => pc.Ejecutada && pc.Activo==true);
 
         List<int> idCuentas = await _context.PresupuestoCuentas
+            .Where(x=> x.Activo==true)
             .Select(x => x.IdCuenta)
             .ToListAsync();
 
@@ -366,8 +354,6 @@ public class PresupuestoCuentaRepository
 
         return new PresupuestoSummaryDTO
         {
-            Ejecutadas = Ejecutadas,
-            NoEjecutadas = NoEjecutadas,
             Presupuesto = cantidadTotal,
             Disponible = disponible,
             Gastado = Total
@@ -375,12 +361,12 @@ public class PresupuestoCuentaRepository
     }
     public async Task<PresupuestoCuenta> GetPresupuestoCuentaByIdAsync(int id)
     {
-        return await _context.PresupuestoCuentas                           
+        return await _context.PresupuestoCuentas.Where(x=>x.Activo==true)                       
                              .FirstOrDefaultAsync(pc => pc.IdCuentas == id);
     }
-    public async Task AddPresupuestoCuentasAsync(List<PresupuestoCuenta> cuentas)
+    public async Task AddPresupuestoCuentasAsync(PresupuestoCuenta cuenta)
     {
-        _context.PresupuestoCuentas.AddRange(cuentas);
+        _context.PresupuestoCuentas.Add(cuenta);
         await _context.SaveChangesAsync();
     }
     public async Task<PresupuestoCuenta> AddPresupuestoCuentaAsync(PresupuestoCuenta presupuestoCuenta)
@@ -392,16 +378,27 @@ public class PresupuestoCuentaRepository
 
     public async Task UpdatePresupuestoCuentaAsync(PresupuestoCuenta presupuestoCuentaToUpdate)
     {
-        var existingPresupuestoCuenta = await _context.PresupuestoCuentas.FirstOrDefaultAsync(pc => pc.IdCuentas == presupuestoCuentaToUpdate.IdCuentas);
+        var existingPresupuestoCuenta = await _context.PresupuestoCuentas.Where(x => x.Activo == true).FirstOrDefaultAsync(pc => pc.IdCuentas == presupuestoCuentaToUpdate.IdCuentas);
+
         if (existingPresupuestoCuenta != null)
         {
-            existingPresupuestoCuenta.IdPresu = presupuestoCuentaToUpdate.IdPresu;
             existingPresupuestoCuenta.IdCuenta = presupuestoCuentaToUpdate.IdCuenta;
             existingPresupuestoCuenta.Descripcion = presupuestoCuentaToUpdate.Descripcion;
             existingPresupuestoCuenta.Cantidad = presupuestoCuentaToUpdate.Cantidad;
             existingPresupuestoCuenta.Comentarios = presupuestoCuentaToUpdate.Comentarios;
             await _context.SaveChangesAsync();
         }
+
+        decimal sumCantidad = await _context.PresupuestoCuentas
+        .Where(x => x.IdPresu == existingPresupuestoCuenta.IdPresu && x.Activo == true)
+        .SumAsync(x => x.Cantidad);
+
+
+        var Presupuesto = await _context.presupuesto.Where(x => x.IdPresu == existingPresupuestoCuenta.IdPresu).FirstOrDefaultAsync();
+
+        Presupuesto.Cantidad = sumCantidad;
+        _context.SaveChangesAsync();
+
     }
 
     public async Task DeletePresupuestoCuentaAsync(int id)
@@ -423,20 +420,41 @@ public class PresupuestoCuentaRepository
             await _context.SaveChangesAsync();
         }
     }
-
-    public async Task DesactivarEjecucion(int id, bool esParcial)
+    public async Task DesactivarItemPresupuesto(int id)
     {
-  
+        var presupuestoCuenta = await _context.PresupuestoCuentas.Where(x => x.IdCuentas == id).FirstOrDefaultAsync();
 
-        if (!esParcial)
+        if (presupuestoCuenta != null)
         {
-            var presupuestoCuenta = await _context.ItemsEjecutados
-              .Where(x => x.id_cuenta == id)
-              .OrderByDescending(x => x.id_ejecu)
-              .FirstOrDefaultAsync();
+            presupuestoCuenta.Activo = false;
+            await _context.SaveChangesAsync();
 
+            var presupuesto = await _context.presupuesto.Where(p => p.IdPresu == presupuestoCuenta.IdPresu).FirstOrDefaultAsync();
+
+            if (presupuesto != null)
+            {
+                var newCantidad = await _context.PresupuestoCuentas
+                    .Where(pc => pc.IdPresu == presupuestoCuenta.IdPresu && pc.Activo)
+                    .SumAsync(pc => pc.Cantidad);
+
+                presupuesto.Cantidad = newCantidad;
+
+                await _context.SaveChangesAsync();
+            }
+        }
+    }
+
+    public async Task DesactivarEjecucion(int id)
+    {
+        var presupuestoCuentaEjecutado = await _context.ItemsEjecutados
+            .Where(x => x.id_cuenta == id && x.Activo == true)
+            .OrderByDescending(x => x.id_ejecu)
+            .FirstOrDefaultAsync();
+
+        if (presupuestoCuentaEjecutado != null)
+        {
             var cuenta = await _context.PresupuestoCuentas
-                .Where(x => x.IdCuentas == presupuestoCuenta.id_cuenta)
+                .Where(x => x.IdCuentas == presupuestoCuentaEjecutado.id_cuenta && x.Activo == true)
                 .FirstOrDefaultAsync();
 
             if (cuenta != null)
@@ -446,43 +464,42 @@ public class PresupuestoCuentaRepository
                 cuenta.Modificada = false;
             }
 
-            presupuestoCuenta.Activo = false;
+            presupuestoCuentaEjecutado.Activo = false;
             await _context.SaveChangesAsync();
         }
-        else
+
+        var presupuestoCuentaParcial = await _context.PresupuestoCuentas
+            .Where(x => x.IdCuentas == id && x.Activo == true)
+            .FirstOrDefaultAsync();
+
+        if (presupuestoCuentaParcial != null)
         {
-            var presupuestoCuentaFromPresuCuentas = await _context.PresupuestoCuentas
-                .Where(x => x.IdCuentas == id)
-                .FirstOrDefaultAsync();
+            var ejecucionesParciales = await _context.ItemsEjecucionParcial
+                .Where(x => x.id_cuenta == presupuestoCuentaParcial.IdCuentas && x.Activo == true)
+                .ToListAsync();
 
-            if (presupuestoCuentaFromPresuCuentas != null)
+            if (ejecucionesParciales.Any())
             {
-                var ejecucionesParciales = await _context.ItemsEjecucionParcial
-                    .Where(x => x.id_cuenta == presupuestoCuentaFromPresuCuentas.IdCuentas)
-                    .ToListAsync();
-
-                if (ejecucionesParciales.Any())
+                foreach (var ejecParcial in ejecucionesParciales)
                 {
-                    foreach (var ejecParcial in ejecucionesParciales)
-                    {
-                        ejecParcial.Activo = false;
-                    }
+                    ejecParcial.Activo = false;
                 }
-
-                presupuestoCuentaFromPresuCuentas.Ejecutada = false;
-                presupuestoCuentaFromPresuCuentas.EjecucionParcial = false;
-                presupuestoCuentaFromPresuCuentas.Modificada = false;
-
-                await _context.SaveChangesAsync();
             }
+
+            presupuestoCuentaParcial.Ejecutada = false;
+            presupuestoCuentaParcial.EjecucionParcial = false;
+            presupuestoCuentaParcial.Modificada = false;
+
+            await _context.SaveChangesAsync();
         }
     }
+
 
 
     public async Task<List<PresupuestoCuenta>> FindByPresupuestoIdAsync(int idPresu)
     {
         return await _context.PresupuestoCuentas
-                             .Where(pc => pc.IdPresu == idPresu)
+                             .Where(pc => pc.IdPresu == idPresu && pc.Activo==true)
                              .ToListAsync();
     }
 
@@ -496,16 +513,17 @@ public class PresupuestoCuentaRepository
         using (var transaction = await _context.Database.BeginTransactionAsync())
         {
             try
-            {
+            { 
                 _context.ItemsEjecutados.Add(item);
                 await _context.SaveChangesAsync();
 
-                var presupuestoCuenta = await _context.PresupuestoCuentas
+                var presupuestoCuenta = await _context.PresupuestoCuentas.Where(x=>x.Activo==true)
                                                       .FirstOrDefaultAsync(pc => pc.IdCuentas == item.id_cuenta);
 
                 if (presupuestoCuenta != null)
                 {
                     presupuestoCuenta.Ejecutada = true;
+                    presupuestoCuenta.Modificada = true;
                     await _context.SaveChangesAsync();
                 }
 
@@ -527,7 +545,7 @@ public class PresupuestoCuentaRepository
                 _context.ItemsEjecutados.Add(item);
                 await _context.SaveChangesAsync();
 
-                var cuenta = await _context.PresupuestoCuentas.FirstOrDefaultAsync(pc => pc.IdCuentas == item.id_cuenta);
+                var cuenta = await _context.PresupuestoCuentas.Where(x => x.Activo == true).FirstOrDefaultAsync(pc => pc.IdCuentas == item.id_cuenta);
                 if (cuenta == null)
                 {
                     throw new Exception("PresupuestoCuenta not found.");
@@ -590,7 +608,7 @@ public class PresupuestoCuentaRepository
                 _context.ItemsEjecucionParcial.Add(item);
                 await _context.SaveChangesAsync();
 
-                var cuenta = await _context.PresupuestoCuentas.FirstOrDefaultAsync(pc => pc.IdCuentas == item.id_cuenta);
+                var cuenta = await _context.PresupuestoCuentas.Where(x => x.Activo == true).FirstOrDefaultAsync(pc => pc.IdCuentas == item.id_cuenta);
                 if (cuenta == null)
                 {
                     throw new Exception("PresupuestoCuenta not found.");
@@ -648,7 +666,7 @@ public class PresupuestoCuentaRepository
     {
         string nombreAnterior = "";
         var cuenta = await _context.PresupuestoCuentas
-                                   .FirstOrDefaultAsync(pc => pc.IdCuentas == dto.IdCuentas);
+                                   .FirstOrDefaultAsync(pc => pc.IdCuentas == dto.IdCuentas && pc.Activo==true);
         if (cuenta == null)
         {
             throw new Exception("PresupuestoCuenta not found.");
@@ -721,7 +739,7 @@ public class PresupuestoCuentaRepository
                 _context.ItemsEjecucionParcial.Add(item);
                 await _context.SaveChangesAsync();
 
-                var presupuestoCuenta = await _context.PresupuestoCuentas
+                var presupuestoCuenta = await _context.PresupuestoCuentas.Where(x=>x.Activo==true)
                                                       .FirstOrDefaultAsync(pc => pc.IdCuentas == item.id_cuenta);
 
                 if (presupuestoCuenta != null)
@@ -750,72 +768,70 @@ public class PresupuestoCuentaRepository
                 {
                     EjecucionesParciales = new List<ListadoEjecParciales>()
                 };
+
                 PresupuestoCuenta cuenta = await _context.PresupuestoCuentas
-                                                        .Where(x => x.IdCuentas == idcuentas)
+                                                        .Where(x => x.IdCuentas == idcuentas && x.Activo == true)
                                                         .FirstOrDefaultAsync();
 
                 if (cuenta != null)
                 {
                     decimal totalSumado = 0;
 
-                    if (cuenta.EjecucionParcial)
-                    {
-                        var ejecucionesParciales = await _context.ItemsEjecucionParcial
-                                                                .Where(x => x.id_cuenta == idcuentas && x.Activo)
-                                                                .ToListAsync();
+                    var ejecucionesParciales = await _context.ItemsEjecucionParcial
+                                                            .Where(x => x.id_cuenta == idcuentas && x.Activo)
+                                                            .ToListAsync();
 
-                        foreach (var ejecParcial in ejecucionesParciales)
+                    foreach (var ejecParcial in ejecucionesParciales)
+                    {
+                        string proveedorName;
+                        if (ejecParcial.EsIngreso)
                         {
-                            // Determine where to fetch the "proveedor" name
-                            string proveedorName;
-                            if (ejecParcial.EsIngreso)
-                            {
-                                // Fetch from Servicios if EsIngreso is true
-                                proveedorName = await _context.Servicios
-                                                             .Where(s => s.IdServi == ejecParcial.proveedor)
-                                                             .Select(s => s.Nombre)
-                                                             .FirstOrDefaultAsync();
-                            }
-                            else
-                            {
-                                // Fetch from Proveedores if EsIngreso is false
-                                proveedorName = await _context.proveedores
-                                                              .Where(p => p.id_prov == ejecParcial.proveedor)
-                                                              .Select(p => p.descripcion)
-                                                              .FirstOrDefaultAsync();
-                            }
-
-                            var ejecParcialDTO = new ListadoEjecParciales
-                            {
-                                id_ejecupar = ejecParcial.id_ejecupar,
-                                id_cuenta = ejecParcial.id_cuenta,
-                                cantidad = ejecParcial.cantidad,
-                                fecha_compra = ejecParcial.fecha_compra,
-                                observaciones = ejecParcial.observaciones,
-                                proveedor = ejecParcial.proveedor,
-                                proveedorName = proveedorName // Now the provider name can come from either table
-                            };
-
-                            PresuCuentas.EjecucionesParciales.Add(ejecParcialDTO);
+                            proveedorName = await _context.Servicios
+                                                         .Where(s => s.IdServi == ejecParcial.proveedor)
+                                                         .Select(s => s.Nombre)
+                                                         .FirstOrDefaultAsync();
                         }
-
-                        PresuCuentas.fecha_compra = ejecucionesParciales.Select(x => x.fecha_compra).FirstOrDefault();
-                        totalSumado = ejecucionesParciales.Sum(x => x.cantidad);
-
-                    }
-                    else
-                    {
-                        var itemEjecutado = await _context.ItemsEjecutados
-                                                          .Where(x => x.id_cuenta == idcuentas && x.Activo)
+                        else
+                        {
+                            proveedorName = await _context.proveedores
+                                                          .Where(p => p.id_prov == ejecParcial.proveedor)
+                                                          .Select(p => p.descripcion)
                                                           .FirstOrDefaultAsync();
-                        if (itemEjecutado != null)
-                        {
-                            totalSumado = itemEjecutado.cantidad_final;
-                            PresuCuentas.fecha_compra = itemEjecutado.fecha_compra;
                         }
+
+                        var ejecParcialDTO = new ListadoEjecParciales
+                        {
+                            id_ejecupar = ejecParcial.id_ejecupar,
+                            id_cuenta = ejecParcial.id_cuenta,
+                            cantidad = ejecParcial.cantidad,
+                            fecha_compra = ejecParcial.fecha_compra,
+                            observaciones = ejecParcial.observaciones,
+                            proveedor = ejecParcial.proveedor,
+                            proveedorName = proveedorName,
+                            Bloqueado = ejecParcial.Bloqueado,
+                            Fecha_Bloqueo = ejecParcial.Fecha_Bloqueo
+                        };
+
+                        PresuCuentas.EjecucionesParciales.Add(ejecParcialDTO);
                     }
 
-                    // Set the remaining properties of PresuCuentas
+                    if (ejecucionesParciales.Any())
+                    {
+                        PresuCuentas.fecha_compra = ejecucionesParciales.Select(x => x.fecha_compra).FirstOrDefault();
+                        totalSumado += ejecucionesParciales.Sum(x => x.cantidad);
+                    }
+
+                    var itemEjecutado = await _context.ItemsEjecutados
+                                                      .Where(x => x.id_cuenta == idcuentas && x.Activo)
+                                                      .FirstOrDefaultAsync();
+
+                    if (itemEjecutado != null)
+                    {
+                        totalSumado += itemEjecutado.cantidad_final;
+                        PresuCuentas.fecha_compra = itemEjecutado.fecha_compra;
+                        
+                    }
+
                     PresuCuentas.IdCuentas = cuenta.IdCuentas;
                     PresuCuentas.IdPresu = cuenta.IdPresu;
                     PresuCuentas.IdCuenta = cuenta.IdCuenta;

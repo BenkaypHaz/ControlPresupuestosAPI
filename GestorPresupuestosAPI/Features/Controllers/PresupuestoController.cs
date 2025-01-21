@@ -46,10 +46,10 @@ public class PresupuestosController : ControllerBase
         var response = await _presupuestoService.GetTipoPresupuesto();
         return Ok(response);
     }
-    [HttpGet("CrearPresupuesto/{nombre}/{tipo}/{usuid}")]
-    public async Task<ActionResult<ApiResponse>> GetTipoPresupuestos(string nombre, int tipo, int usuid)
+    [HttpGet("CrearPresupuesto/{nombre}/{tipo}/{usuid}/{anio}")]
+    public async Task<ActionResult<ApiResponse>> GetTipoPresupuestos(string nombre, int tipo, int usuid, int anio)
     {
-        var response = await _presupuestoService.CrearPresupuestoAsync(nombre, tipo, usuid);
+        var response = await _presupuestoService.CrearPresupuestoAsync(nombre, tipo, usuid, anio);
         return Ok(response);
     }
 
@@ -67,11 +67,11 @@ public class PresupuestosController : ControllerBase
         }
     }
     [HttpGet("GetPresupuestoByUsuId")]
-    public async Task<IActionResult> GetPresupuestoByUsuId([FromQuery] int idUsu)
+    public async Task<IActionResult> GetPresupuestoByUsuId([FromQuery] int idUsu, int rol)
     {
         try
         {
-            var result = await _presupuestoService.GetPresupuestoByUsuId(idUsu);
+            var result = await _presupuestoService.GetPresupuestoByUsuId(idUsu, rol);
             return Ok(result);
         }
         catch (Exception ex)
@@ -146,14 +146,10 @@ public class PresupuestosController : ControllerBase
     }
 
     [HttpPost("AddWithCuentas")]
-    public async Task<ActionResult<ApiResponse>> AddPresupuestoWithCuentas([FromBody] PresupuestoWithCuentasDTO data)
+    public async Task<ActionResult<ApiResponse>> AddPresupuestoWithCuentas([FromBody] PresuTotalyCuenta data)
     {
-        if (data.cantidad == null || data.Cuentas == null || !data.Cuentas.Any())
-        {
-            return BadRequest(ApiResponse.BadRequest("Invalid data provided"));
-        }
 
-        var response = await _presupuestoService.AddPresupuestoWithCuentasAsync(data.cantidad, data.Cuentas);
+        var response = await _presupuestoService.AddPresupuestoWithCuentasAsync(data.Cantidad, data.Cuenta);
         return StatusCode(response.Success ? StatusCodes.Status201Created : StatusCodes.Status400BadRequest, response);
     }
 
@@ -167,6 +163,33 @@ public class PresupuestosController : ControllerBase
         }
         return Ok(response);
     }
+
+    [HttpGet("BloquearCuentasPresupuesto")]
+    public async Task<IActionResult> BloquearCuentasPresupuesto([FromQuery] int idPresu, DateTime fechainicio, DateTime fechafin)
+    {
+        try
+        {
+            var result = await _presupuestoService.BloquearCuentasPresupuesto(idPresu, fechainicio, fechafin);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest($"An error occurred while updating the presupuesto estado: {ex.Message}");
+        }
+    }
+
+
+    [HttpGet("GetPresupuestosUsuDashboard/{id}/{tipo}/{anio}", Name = "GetPresupuestosUsuDashboard")]
+    public async Task<ActionResult<ApiResponse>> GetPresupuestosUsuDashboard(int id, int tipo, int anio)
+    {
+        var response = await _presupuestoService.GetPresupuestosUsuDashboard(id,tipo,anio);
+        if (!response.Success)
+        {
+            return NotFound(response);
+        }
+        return Ok(response);
+    }
+
 
 
 }

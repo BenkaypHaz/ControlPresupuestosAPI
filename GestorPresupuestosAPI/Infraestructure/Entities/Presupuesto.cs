@@ -29,4 +29,7 @@ public class Presupuesto
     public int usu_crea { get; set; }
     [Column("id_departamento")]
     public int id_departamento { get; set; }
+
+    [Column("Anio_Presupuesto")]
+    public int Anio_Presupuesto { get; set; }
 }

@@ -15,8 +15,7 @@ public class PresupuestoDepa
     [Column("cantidad")]
     [DataType(DataType.Currency)]
     public decimal Cantidad { get; set; }
-    [Column("tipo_presupuesto")]
-    public int tipo_presupuesto { get; set; }
+    public string tipo_presupuesto { get; set; }
     [Column("estado")]
     public int estado { get; set; }
     [Column("fecha_creacion")]
@@ -28,5 +27,5 @@ public class PresupuestoDepa
     [Column("usu_crea")]
     public int usu_crea { get; set; }
     public string Departamento { get; set; }
-
+    public int Anio_presupuesto { get; set; }
 }

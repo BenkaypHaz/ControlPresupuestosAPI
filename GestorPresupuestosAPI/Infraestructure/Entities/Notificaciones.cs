@@ -16,7 +16,6 @@ public class Notificaciones
     public int CuentaId { get; set; }
 
     [Column("modificacion")]
-    [StringLength(250)]
     public string Modificacion { get; set; }
     [Column("usu_presupuesto")]
     public int UsuPresupuesto { get; set; }
@@ -24,7 +23,6 @@ public class Notificaciones
     public int UsuModifica { get; set; }
 
     [Column("comentario")]
-    [StringLength(250)]
     public string Comentario { get; set; }
 
     [Column("Leida")]

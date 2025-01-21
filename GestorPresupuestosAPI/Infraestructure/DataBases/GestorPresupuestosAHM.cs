@@ -26,6 +26,12 @@ namespace GestorPresupuestosAPI.Infraestructure.DataBases
         public DbSet<Permisos> Permisos { get; set; } 
         public DbSet<Notificaciones> Notificaciones { get; set; }
         public DbSet<Servicio> Servicios { get; set; }
+        public DbSet<CuentasxSubCuentas> CuentasxSubCuentas { get; set; }
+        public DbSet<Cuentas_Madre> CuentasMadre { get; set; }
+        public DbSet<Versiones> Versiones { get; set; }
+        public DbSet<GeneralesxMadre> GeneralesxMadre { get; set; }
+        public DbSet<Cuentas_Generales> CuentasTitulo { get; set; }
+
 
     }
 }

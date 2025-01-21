@@ -55,11 +55,11 @@ public class PresupuestoService
             return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
         }
     }
-    public async Task<ApiResponse> GetPresupuestoByUsuId(int id)
+    public async Task<ApiResponse> GetPresupuestoByUsuId(int id, int rol)
     {
         try
         {
-            var presupuestos = await _presupuestoRepository.GetPresupuestoByUsuId(id);
+            var presupuestos = await _presupuestoRepository.GetPresupuestoByUsuId(id, rol);
             return ApiResponse.Ok("Presupuestos retrieved successfully", presupuestos);
         }
         catch (Exception ex)
@@ -93,11 +93,11 @@ public class PresupuestoService
     }
 
     
-    public async Task<ApiResponse> CrearPresupuestoAsync(string nombre, int tipo, int usuid)
+    public async Task<ApiResponse> CrearPresupuestoAsync(string nombre, int tipo, int usuid, int anio)
     {
         try
         {
-            var createdPresupuesto = await _presupuestoRepository.CrearPresupuesto(nombre,tipo,usuid);
+            var createdPresupuesto = await _presupuestoRepository.CrearPresupuesto(nombre,tipo,usuid, anio);
             return ApiResponse.Ok("Presupuesto added successfully", createdPresupuesto);
         }
         catch (Exception ex)
@@ -137,6 +137,23 @@ public class PresupuestoService
             return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
         }
     }
+    public async Task<ApiResponse> GetPresupuestosUsuDashboard(int id, int tipo, int anio)
+    {
+        try
+        {
+            var presupuesto = await _presupuestoRepository.GetPresupuestosUsuDashboard(id, tipo, anio);
+            if (presupuesto == null)
+            {
+                return ApiResponse.NotFound($"Presupuesto with ID {id} not found.");
+            }
+            return ApiResponse.Ok("Presupuesto found", presupuesto);
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred: {ex.Message}");
+        }
+    }
+
     public async Task<ApiResponse> GetPresupuestoByIdAsync(int id)
     {
         try
@@ -210,6 +227,20 @@ public class PresupuestoService
             return ApiResponse.BadRequest($"An error occurred while deactivating the presupuesto: {ex.Message}");
         }
     }
+
+    public async Task<ApiResponse> BloquearCuentasPresupuesto(int idPresu, DateTime fechainicio, DateTime fechafin)
+    {
+        try
+        {
+            await _presupuestoRepository.BloquearCuentasPresupuesto(idPresu, fechainicio, fechafin);
+            return ApiResponse.Ok($"Cuentas Bloqueadas.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while deactivating the presupuesto: {ex.Message}");
+        }
+    }
+
     public async Task<ApiResponse> GetPresupuestoInfo(int id)
     {
         try
@@ -224,36 +255,17 @@ public class PresupuestoService
     }
 
 
-    public async Task<ApiResponse> AddPresupuestoWithCuentasAsync(decimal total, List<PresupuestoCuenta> newCuentas)
+    public async Task<ApiResponse> AddPresupuestoWithCuentasAsync(decimal total, PresupuestoCuenta newCuenta)
     {
         using (var transaction = _context.Database.BeginTransaction())
         {
             try
             {
-                Presupuesto presupuesto = await _presupuestoRepository.AddPresupuestoAsync(total, newCuentas.FirstOrDefault().IdPresu);
 
-                if (newCuentas.Any())
-                {
-                    var existingCuentas = await _presupuestoCuentaRepository.FindByPresupuestoIdAsync(presupuesto.IdPresu);
+                await _presupuestoCuentaRepository.AddPresupuestoCuentasAsync(newCuenta);
 
-                    var ejecutadaStatusMap = existingCuentas.ToDictionary(c => c.Descripcion, c => c.Ejecutada);
+                Presupuesto presupuesto = await _presupuestoRepository.AddPresupuestoAsync(total, newCuenta.IdPresu);
 
-                    if (existingCuentas.Any())
-                    {
-                        await _presupuestoCuentaRepository.DeletePresupuestoCuentasAsync(existingCuentas);
-                    }
-
-                    foreach (var cuenta in newCuentas)
-                    {
-                        cuenta.IdPresu = presupuesto.IdPresu; 
-                        if (ejecutadaStatusMap.ContainsKey(cuenta.Descripcion))
-                        {
-                            cuenta.Ejecutada = ejecutadaStatusMap[cuenta.Descripcion]; 
-                        }
-                    }
-
-                    await _presupuestoCuentaRepository.AddPresupuestoCuentasAsync(newCuentas);
-                }
 
                 transaction.Commit();
                 return ApiResponse.Ok("Presupuesto and related cuentas added successfully", null);

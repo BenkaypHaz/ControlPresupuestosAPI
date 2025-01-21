@@ -13,7 +13,6 @@ public class ItemsEjecucionParcial
 
     public int proveedor { get; set; }
 
-    [StringLength(500)]
     public string observaciones { get; set; }
 
     [Column(TypeName = "decimal(15, 2)")]
@@ -26,4 +25,11 @@ public class ItemsEjecucionParcial
 
     [Column("EsIngreso")]
     public bool EsIngreso { get; set; }
+    [Column("Bloqueado")]
+    public bool Bloqueado { get; set; }
+    [Column("Fecha_Bloqueo")]
+    [DataType(DataType.Date)]
+    public DateTime? Fecha_Bloqueo { get; set; }
+
+
 }

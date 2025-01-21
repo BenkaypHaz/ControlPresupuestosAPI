@@ -194,12 +194,23 @@ public class PresupuestoCuentaService
             return ApiResponse.BadRequest($"An error occurred while deleting the presupuestoCuenta: {ex.Message}");
         }
     }
-
-    public async Task<ApiResponse> DesactivarEjecucion(int id, bool esParcial)
+    public async Task<ApiResponse> desactivarItemPresupuesto(int id)
     {
         try
         {
-            await _presupuestoCuentaRepository.DesactivarEjecucion(id, esParcial);
+            await _presupuestoCuentaRepository.DesactivarItemPresupuesto(id);
+            return ApiResponse.Ok($"PresupuestoCuenta with ID {id} desactivated successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while deleting the presupuestoCuenta: {ex.Message}");
+        }
+    }
+    public async Task<ApiResponse> DesactivarEjecucion(int id)
+    {
+        try
+        {
+            await _presupuestoCuentaRepository.DesactivarEjecucion(id);
             return ApiResponse.Ok($"Ejecucion with ID {id} desactivated successfully.");
         }
         catch (Exception ex)

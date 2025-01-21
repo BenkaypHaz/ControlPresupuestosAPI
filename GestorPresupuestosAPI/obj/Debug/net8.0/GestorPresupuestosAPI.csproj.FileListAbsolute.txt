@@ -419,3 +419,10 @@ C:\Users\Benkay Ham\Desktop\Proyectos GITHUB\ControlPresupuestosAPI\GestorPresup
 C:\Users\Benkay Ham\Desktop\Proyectos GITHUB\ControlPresupuestosAPI\GestorPresupuestosAPI\obj\Debug\net8.0\GestorPresupuestosAPI.pdb
 C:\Users\Benkay Ham\Desktop\Proyectos GITHUB\ControlPresupuestosAPI\GestorPresupuestosAPI\obj\Debug\net8.0\GestorPresupuestosAPI.genruntimeconfig.cache
 C:\Users\Benkay Ham\Desktop\Proyectos GITHUB\ControlPresupuestosAPI\GestorPresupuestosAPI\obj\Debug\net8.0\ref\GestorPresupuestosAPI.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+C:\Users\informatica3\Desktop\Proyectos GITHUB\GestorPresupuestosAPI\GestorPresupuestosAPI\bin\Debug\net8.0\System.ClientModel.dll

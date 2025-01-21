@@ -9,7 +9,6 @@ namespace GestorPresupuestosAPI.Infraestructure.Modelos
 
         public int id_cuenta { get; set; }
 
-
         public int proveedor { get; set; }
         public string proveedorName { get; set; }
 
@@ -21,5 +20,10 @@ namespace GestorPresupuestosAPI.Infraestructure.Modelos
         [Column("fecha_compra")]
         [DataType(DataType.Date)]
         public DateTime fecha_compra { get; set; }
+        [Column("Bloqueado")]
+        public bool Bloqueado { get; set; }
+        [Column("Fecha_Bloqueo")]
+        [DataType(DataType.Date)]
+        public DateTime? Fecha_Bloqueo { get; set; }
     }
 }

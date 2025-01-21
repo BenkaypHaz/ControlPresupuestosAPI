@@ -84,7 +84,9 @@ public class PresupuestoRepository
                                       estado = p.estado,
                                       Activo = p.Activo,
                                       usu_crea = p.usu_crea,
-                                      Departamento = d.Nombre
+                                      Departamento = d.Nombre,
+                                      tipo_presupuesto = p.tipo_presupuesto == 1 ? "Egreso" : "Ingreso",
+                                      Anio_presupuesto = p.Anio_Presupuesto
                                   }).ToListAsync();
 
         return presupuestos;
@@ -103,7 +105,9 @@ public class PresupuestoRepository
                                       estado = p.estado,
                                       Activo = p.Activo,
                                       usu_crea = p.usu_crea,
-                                      Departamento = d.Nombre
+                                      Departamento = d.Nombre,
+                                      tipo_presupuesto = p.tipo_presupuesto == 1 ? "Egreso" : "Ingreso",
+                                      Anio_presupuesto = p.Anio_Presupuesto
                                   }).ToListAsync();
 
         return presupuestos;
@@ -113,24 +117,50 @@ public class PresupuestoRepository
     {
         return await _context.Tipo_presupuesto.ToListAsync();
     }
-    public async Task<List<PresupuestoDepa>> GetPresupuestoByUsuId(int id)
+    public async Task<List<PresupuestoDepa>> GetPresupuestoByUsuId(int id, int rol)
     {
-        var presupuestos = await (from p in _context.presupuesto
-                                  join d in _context.departamentos on p.id_departamento equals d.IdDepartamento
-                                  where p.Activo && p.usu_crea == id 
-                                  select new PresupuestoDepa
-                                  {
-                                      IdPresu = p.IdPresu,
-                                      nombre = p.nombre,
-                                      Cantidad = p.Cantidad,
-                                      FechaCreacion = p.FechaCreacion,
-                                      Activo = p.Activo,
-                                      estado = p.estado,
-                                      usu_crea = p.usu_crea,
-                                      Departamento = d.Nombre
-                                  }).ToListAsync();
 
-        return presupuestos;
+        if (rol == 1)
+        {
+            var presupuestos = await (from p in _context.presupuesto
+                                      join d in _context.departamentos on p.id_departamento equals d.IdDepartamento
+                                      where p.Activo
+                                      select new PresupuestoDepa
+                                      {
+                                          IdPresu = p.IdPresu,
+                                          nombre = p.nombre,
+                                          Cantidad = p.Cantidad,
+                                          FechaCreacion = p.FechaCreacion,
+                                          Activo = p.Activo,
+                                          estado = p.estado,
+                                          usu_crea = p.usu_crea,
+                                          Departamento = d.Nombre
+                                      }).ToListAsync();
+            return presupuestos;
+
+        }
+        else
+        {
+            var presupuestos = await (from p in _context.presupuesto
+                                      join d in _context.departamentos on p.id_departamento equals d.IdDepartamento
+                                      where p.Activo && p.usu_crea == id
+                                      select new PresupuestoDepa
+                                      {
+                                          IdPresu = p.IdPresu,
+                                          nombre = p.nombre,
+                                          Cantidad = p.Cantidad,
+                                          FechaCreacion = p.FechaCreacion,
+                                          Activo = p.Activo,
+                                          estado = p.estado,
+                                          usu_crea = p.usu_crea,
+                                          Departamento = d.Nombre
+                                      }).ToListAsync();
+            return presupuestos;
+
+        }
+
+
+
     }
     public async Task<List<PresupuestoDepa>> GetPresupuestoCreadoById(int id)
     {
@@ -165,11 +195,36 @@ public class PresupuestoRepository
                                       Activo = p.Activo,
                                       estado = p.estado,
                                       usu_crea = p.usu_crea,
-                                      Departamento = d.Nombre
+                                      Departamento = d.Nombre,
+                                      tipo_presupuesto = p.tipo_presupuesto == 1 ? "Egreso":"Ingreso",
+                                      Anio_presupuesto = p.Anio_Presupuesto
                                   }).ToListAsync();
 
         return presupuestos;
     }
+
+    public async Task<List<PresupuestoDepa>> GetPresupuestosUsuDashboard(int id,int tipo, int anio)
+    {
+        var presupuestos = await (from p in _context.presupuesto
+                                  join d in _context.departamentos on p.id_departamento equals d.IdDepartamento
+                                  where p.Activo && p.usu_crea == id && p.estado == 3 && p.tipo_presupuesto == tipo && p.Anio_Presupuesto == anio
+                                  select new PresupuestoDepa
+                                  {
+                                      IdPresu = p.IdPresu,
+                                      nombre = p.nombre,
+                                      Cantidad = p.Cantidad,
+                                      FechaCreacion = p.FechaCreacion,
+                                      Activo = p.Activo,
+                                      estado = p.estado,
+                                      usu_crea = p.usu_crea,
+                                      Departamento = d.Nombre,
+                                      tipo_presupuesto = p.tipo_presupuesto == 1 ? "Egreso" : "Ingreso",
+                                      Anio_presupuesto = p.Anio_Presupuesto
+                                  }).ToListAsync();
+
+        return presupuestos;
+    }
+
     public async Task<List<PresupuestoDepa>> GetPresupuestoCreadoByUsuAsync(int id)
     {
         var presupuestos = await (from p in _context.presupuesto
@@ -196,9 +251,13 @@ public class PresupuestoRepository
     public async Task<Presupuesto> AddPresupuestoAsync(decimal cantidad, int idpresu)
     {
         var presupuesto = await _context.presupuesto.FindAsync(idpresu);
+        decimal sumCantidad = await _context.PresupuestoCuentas
+    .Where(x => x.IdPresu == idpresu && x.Activo==true)
+    .SumAsync(x => x.Cantidad);
+
         if (presupuesto != null)
         {
-            presupuesto.Cantidad = cantidad;
+            presupuesto.Cantidad = sumCantidad;
 
             await _context.SaveChangesAsync();
   }
@@ -212,8 +271,9 @@ public class PresupuestoRepository
                                           .FirstOrDefaultAsync();
 
         List<PresupuestoCuenta> cuentas = await _context.PresupuestoCuentas
-                                                        .Where(x => x.IdPresu == id)
-                                                        .ToListAsync();
+            .Where(x => x.IdPresu == id && x.Activo == true)
+            .OrderBy(x => x.IdCuentas)  
+            .ToListAsync();
 
         PresupuestoWithCuentasDTO presuInfo = new PresupuestoWithCuentasDTO
         {
@@ -226,7 +286,7 @@ public class PresupuestoRepository
     }
 
 
-    public async Task<Presupuesto> CrearPresupuesto(string nombre, int tipo,int usuId)
+    public async Task<Presupuesto> CrearPresupuesto(string nombre, int tipo,int usuId, int anio)
     {
 
         int idDepartamento = _context.usuarios.Where(x=>x.IdUsuario == usuId).Select(x => x.IdDepartamento).FirstOrDefault();
@@ -240,6 +300,7 @@ public class PresupuestoRepository
         presu.FechaCreacion = DateTime.Today;
         presu.estado = 0;
         presu.id_departamento = idDepartamento;
+        presu.Anio_Presupuesto = anio;
         _context.presupuesto.Add(presu);
         await _context.SaveChangesAsync();
         return presu;
@@ -330,5 +391,50 @@ public class PresupuestoRepository
         { 2, "Corregir" },
         { 3, "Aprobado" }
     };
+
+
+    public async Task<int> BloquearCuentasPresupuesto(int idPresu, DateTime fechainicio, DateTime fechafin)
+    {
+        var itemsToUpdate = await (from presu in _context.presupuesto
+                                   join presucu in _context.PresupuestoCuentas on presu.IdPresu equals presucu.IdPresu
+                                   join ejecu in _context.ItemsEjecutados on presucu.IdCuentas equals ejecu.id_cuenta
+                                   where presucu.Activo == true
+                                   && presucu.Ejecutada == true
+                                   && ejecu.Activo == true
+                                   && presu.IdPresu == idPresu
+                                   && ejecu.fecha_compra >= fechainicio
+                                   && ejecu.fecha_compra <= fechafin
+                                   select ejecu)
+                               .ToListAsync();
+
+        foreach (var item in itemsToUpdate)
+        {
+            item.Bloqueado = true;
+            item.Fecha_Bloqueo = DateTime.Today; 
+        }
+
+        var itemsParcialesToUpdate = await (from presu in _context.presupuesto
+                                   join presucu in _context.PresupuestoCuentas on presu.IdPresu equals presucu.IdPresu
+                                   join ejecu in _context.ItemsEjecucionParcial on presucu.IdCuentas equals ejecu.id_cuenta
+                                   where presucu.Activo == true
+                                   && presucu.EjecucionParcial == true
+                                   && ejecu.Activo == true
+                                   && presu.IdPresu == idPresu
+                                   && ejecu.fecha_compra >= fechainicio
+                                   && ejecu.fecha_compra <= fechafin
+                                   select ejecu)
+                            .ToListAsync();
+
+        foreach (var itemPar in itemsParcialesToUpdate)
+        {
+            itemPar.Bloqueado = true;
+            itemPar.Fecha_Bloqueo = DateTime.Today;
+        }
+
+
+        return await _context.SaveChangesAsync();
+    }
+
+
 
 }
