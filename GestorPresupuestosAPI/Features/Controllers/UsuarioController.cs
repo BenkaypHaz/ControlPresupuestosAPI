@@ -1,6 +1,8 @@
-﻿using GestorPresupuestosAPI.Features.Utility;
+﻿using GestorPresupuestosAPI.Features.Services;
+using GestorPresupuestosAPI.Features.Utility;
 using GestorPresupuestosAPI.Infraestructure.Modelos;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Reporting.WebForms;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -107,5 +109,21 @@ public class UsuarioController : ControllerBase
 
         return Ok(response);
     }
+
+    [HttpGet("SendRecoveryCode")]
+    public async Task<IActionResult> SendRecoveryCode([FromQuery] string email)
+    {
+        try
+        {
+            var message = await _usuarioService.SendRecoveryMail(email);
+
+            return Ok(message);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = ex.Message });
+        }
+    }
+
 
 }

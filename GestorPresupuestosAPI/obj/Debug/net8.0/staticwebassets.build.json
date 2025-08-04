@@ -1,11 +1,12 @@
 {
   "Version": 1,
-  "Hash": "vyPEJZKNmapQOJH2ewhIb/rC6ACtLAqPlMcvPLYdHyM=",
+  "Hash": "FRwxAI+WLbKX3nUIMzEBIKzXGD9/5Lx+h6jad8xfZ9E=",
   "Source": "GestorPresupuestosAPI",
   "BasePath": "_content/GestorPresupuestosAPI",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
   "DiscoveryPatterns": [],
-  "Assets": []
+  "Assets": [],
+  "Endpoints": []
 }

@@ -19,7 +19,7 @@ public class NotificacionesRepository
     {
         return await _context.Notificaciones
             .Where(n => n.UsuPresupuesto == id)
-            .OrderBy(n => n.IdNoti)
+            .OrderByDescending(n => n.IdNoti)
             .ToListAsync();
     }
 

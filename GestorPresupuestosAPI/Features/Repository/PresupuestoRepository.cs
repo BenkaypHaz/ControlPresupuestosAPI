@@ -185,23 +185,27 @@ public class PresupuestoRepository
     {
         var presupuestos = await (from p in _context.presupuesto
                                   join d in _context.departamentos on p.id_departamento equals d.IdDepartamento
-                                  where p.Activo && p.usu_crea==id && p.estado == 3
+                                  where p.Activo && p.usu_crea == id && p.estado == 3
                                   select new PresupuestoDepa
                                   {
                                       IdPresu = p.IdPresu,
                                       nombre = p.nombre,
-                                      Cantidad = p.Cantidad,
+                                      // Aquí hacemos la suma de cantidades para ese presupuesto
+                                      Cantidad = _context.PresupuestoCuentas
+                                                  .Where(pc => pc.IdPresu == p.IdPresu)
+                                                  .Sum(pc => (decimal?)pc.Cantidad) ?? 0,
                                       FechaCreacion = p.FechaCreacion,
                                       Activo = p.Activo,
                                       estado = p.estado,
                                       usu_crea = p.usu_crea,
                                       Departamento = d.Nombre,
-                                      tipo_presupuesto = p.tipo_presupuesto == 1 ? "Egreso":"Ingreso",
+                                      tipo_presupuesto = p.tipo_presupuesto == 1 ? "Egreso" : "Ingreso",
                                       Anio_presupuesto = p.Anio_Presupuesto
                                   }).ToListAsync();
 
         return presupuestos;
     }
+
 
     public async Task<List<PresupuestoDepa>> GetPresupuestosUsuDashboard(int id,int tipo, int anio)
     {

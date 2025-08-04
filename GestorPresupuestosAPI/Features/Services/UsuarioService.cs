@@ -118,6 +118,24 @@ public class UsuarioService
         }
     }
 
+    public async Task<ApiResponse> SendRecoveryMail(string email)
+    {
+        try
+        {
+            var user = await _usuarioRepository.SendCodeToUserByEmailAsync(email);
+            if (user == null)
+            {
+                return ApiResponse.NotFound("User not found.");
+            }
+
+            return ApiResponse.Ok("Code send successfully.");
+        }
+        catch (Exception ex)
+        {
+            return ApiResponse.BadRequest($"An error occurred while changing the password: {ex.Message}");
+        }
+    }
+
     public async Task<ApiResponse> AuthenticateUserAsync(Credentials credentials)
         {
             var user = await _usuarioRepository.GetUserByUsernameAsync(credentials.Username);
